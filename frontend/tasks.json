@@ -27,9 +27,15 @@
       "isActive": true,
       "defaultOpen": false,
       "tasks": [
-        { "id": "k_b1", "name": "🐢 寫作業拖拉不專心", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
-        { "id": "k_b2", "name": "😤 態度不佳 / 頂嘴", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
-        { "id": "k_b3", "name": "⚔️ 故意弄哭弟弟", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" }
+        { "id": "k_b1", "name": "🐢 肢體攻擊： 無論原因為何（即便覺得弟弟欠揍），動手推、打、踢即扣分", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b2", "name": "😤 言語羞辱： 使用人身攻擊字眼（例如：笨蛋、廢物）", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b3", "name": "⚔️ 惡意破壞： 故意毀損弟弟的玩具或作品以示報復", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b4", "name": "⚔️ 說/做不雅文字/行為", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b5", "name": "⚔️ 故意弄哭過度吼叫： 面對問題時，不使用語言溝通而直接用尖叫或大吼處理弟弟", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b6", "name": "⚔️ 故意弄忽視約定： 明確講好（如計時器響）卻賴皮不執行原訂任務哭弟弟", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b7", "name": "⚔️ 故意拒絕冷靜： 當大人介入要求先分開冷靜時，仍持續追著對方叫罵。弄哭弟弟", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b8", "name": "⚔️ 私刑正義： 發現弟弟犯錯時，未告知大人而直接搶奪、處罰弟弟。", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" }
+
       ]
     }
   ],
