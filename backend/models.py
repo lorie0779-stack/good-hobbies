@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from database import Base  # <--- 就是這一行讓 main.py 找得到 Base
+from database import Base
 import datetime
 
 class PlayerStatus(Base):
@@ -18,10 +18,11 @@ class BehaviorLog(Base):
     action_type = Column(String)
     point_change = Column(Integer)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True, default=None)
 
 class CompletedTask(Base):
     __tablename__ = "completed_tasks"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     player_id = Column(String, index=True)
     task_id = Column(String)
