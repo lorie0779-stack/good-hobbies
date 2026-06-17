@@ -1,0 +1,35 @@
+# Fly.io 部署設定 — good-hobbies 後端（FastAPI + SQLite）
+# 用法：在 backend/ 目錄執行 `fly deploy`（需先建 volume + 設 API_TOKEN secret，見 DEPLOY.md）
+app = "good-hobbies-api"
+primary_region = "nrt"   # 東京，貼近台灣家庭使用、延遲最低
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # SQLite 改放掛載的 volume（/data），容器重啟/重建資料不滅
+  SQLALCHEMY_DATABASE_URL = "sqlite:////data/mario_db.sqlite"
+
+# 持久化 volume：放 SQLite 檔
+[[mounts]]
+  source = "good_hobbies_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true          # 免費 HTTPS
+  auto_stop_machines = "stop" # 閒置自動停機 → 趨近零成本
+  auto_start_machines = true  # 有請求自動喚醒（首次冷啟約數秒）
+  min_machines_running = 0
+
+# 健康檢查：對應 main.py 的 GET /api/health（公開、不需 token）
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "get"
+  path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

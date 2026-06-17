@@ -2,8 +2,9 @@ import datetime
 import os
 import shutil
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -11,6 +12,18 @@ import models
 from database import BASE_DIR, DB_PATH, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
+
+# Bearer token 驗證：token 從環境變數讀取（Fly secret），未設定則視為關閉驗證（本機開發）
+API_TOKEN = os.getenv("API_TOKEN", "").strip()
+_bearer = HTTPBearer(auto_error=False)
+
+
+def require_token(creds: HTTPAuthorizationCredentials = Security(_bearer)) -> None:
+    if not API_TOKEN:
+        return  # 本機未設 token → 不擋，方便開發
+    if creds is None or creds.scheme.lower() != "bearer" or creds.credentials != API_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
 
 app = FastAPI(title="瑪利歐金幣系統 API")
 
@@ -21,6 +34,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# 健康檢查：給 Fly health check 用，不需驗證
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
 
 
 class TaskAction(BaseModel):
@@ -64,7 +83,7 @@ def on_startup() -> None:
 
 # 1. 取得玩家當前所有資料
 @app.get("/api/player/{player_id}")
-def get_player_data(player_id: str, db: Session = Depends(get_db)):
+def get_player_data(player_id: str, db: Session = Depends(get_db), _: None = Depends(require_token)):
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
     status = db.query(models.PlayerStatus).filter(models.PlayerStatus.player_id == player_id).first()
@@ -107,7 +126,7 @@ def get_player_data(player_id: str, db: Session = Depends(get_db)):
 
 # 2. 紀錄點數變動與任務打勾
 @app.post("/api/action")
-def record_action(action: TaskAction, db: Session = Depends(get_db)):
+def record_action(action: TaskAction, db: Session = Depends(get_db), _: None = Depends(require_token)):
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
 
     status = db.query(models.PlayerStatus).filter(models.PlayerStatus.player_id == action.player_id).first()
@@ -142,7 +161,7 @@ def record_action(action: TaskAction, db: Session = Depends(get_db)):
 
 # 3. 系統管理員重置（軟刪除，資料保留可復原）
 @app.post("/api/admin/reset/{player_id}")
-def reset_player(player_id: str, db: Session = Depends(get_db)):
+def reset_player(player_id: str, db: Session = Depends(get_db), _: None = Depends(require_token)):
     now = datetime.datetime.now()
 
     status = db.query(models.PlayerStatus).filter(models.PlayerStatus.player_id == player_id).first()

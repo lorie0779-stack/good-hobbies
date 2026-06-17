@@ -270,7 +270,21 @@
   <script>
 
     /* ── 核心狀態 (不可動) ── */
-    const API_BASE      = "http://127.0.0.1:8000/api";
+    /* 本機開發打 127.0.0.1，正式（GitHub Pages）打 Fly 後端 */
+    const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
+    const API_BASE = IS_LOCAL
+      ? "http://127.0.0.1:8000/api"
+      : "https://good-hobbies-api.fly.dev/api";
+    /* 共用靜態 Bearer token：擋隨機掃描，非機密等級驗證（靜態前端原始碼可見） */
+    const API_TOKEN = "X41KmzEmT7GrwB7jhOsOl908SuMcYcgrOjSsb73iD1w";
+
+    /* 統一 fetch：自動帶 Authorization 與 Content-Type */
+    function apiFetch(path, opts = {}) {
+      const headers = Object.assign({}, opts.headers || {}, {
+        "Authorization": "Bearer " + API_TOKEN,
+      });
+      return fetch(`${API_BASE}${path}`, Object.assign({}, opts, { headers }));
+    }
     let   allTasksData  = {};
     let   currentPlayer = 'kyle';
     let   currentTasks  = [];
@@ -348,7 +362,7 @@
       currentTasks = [...(allTasksData[currentPlayer] || []), ...(allTasksData['common'] || [])];
 
       try {
-        const res = await fetch(`${API_BASE}/player/${currentPlayer}`);
+        const res = await apiFetch(`/player/${currentPlayer}`);
         if (res.ok) {
           const data = await res.json();
           totalCoins    = data.total_coins;
@@ -487,7 +501,7 @@
 
     async function sendActionToBackend(taskId, taskName, points, actionType) {
       try {
-        await fetch(`${API_BASE}/action`, {
+        await apiFetch(`/action`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -600,7 +614,7 @@
         if (adjust === "reset") {
           if (confirm(`⚠️ 確定要將【${currentPlayer}】的所有資料恢復到最原始狀態嗎？`)) {
             try {
-              await fetch(`${API_BASE}/admin/reset/${currentPlayer}`, { method: 'POST' });
+              await apiFetch(`/admin/reset/${currentPlayer}`, { method: 'POST' });
               await loadPlayerData();
               alert(`✅ ${currentPlayer} 的資料已重置`);
             } catch(e) { alert("重置失敗！請確認後端是否啟動"); }
@@ -629,7 +643,7 @@
     /* 每 30 秒心跳檢查，後端掉線立即亮紅燈 */
     setInterval(async function () {
       try {
-        const res = await fetch(`${API_BASE}/player/${currentPlayer}`, { method: 'HEAD' });
+        const res = await apiFetch(`/player/${currentPlayer}`, { method: 'HEAD' });
         setBackendStatus(true);
       } catch (_) {
         setBackendStatus(false);
