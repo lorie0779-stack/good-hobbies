@@ -1,0 +1,35 @@
+# Fly.io 部署設定 — good-hobbies V2.2 後端（FastAPI + sqlite3 帳本制）
+# 用法：在 repo root 執行 `fly deploy`（context=root，見 Dockerfile / DEPLOY.md）
+app = "good-hobbies-api"
+primary_region = "nrt"   # 東京，貼近台灣家庭使用
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # 後端 database.py 讀 DATABASE_PATH；指向掛載 volume 的 /data
+  DATABASE_PATH = "/data/database.db"
+
+# 持久化 volume：放 SQLite 帳本 DB
+[[mounts]]
+  source = "good_hobbies_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+# 健康檢查：對應 main.py 的 GET /api/health（公開、不需 token）
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "get"
+  path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

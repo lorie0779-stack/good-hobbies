@@ -1,7 +1,0 @@
-.venv
-__pycache__
-*.pyc
-backups/
-mario_db.sqlite
-*.db
-.DS_Store

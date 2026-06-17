@@ -2,3 +2,5 @@ mario_db.sqlite
 *.db
 *.sqlite
 backups/
+__pycache__/
+*.pyc

@@ -3,221 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>雙寶冒險王</title>
-
-  <!-- ① Theme System (必須最先載入) -->
-  <script src="src/config/themeConfig.js?v=20260420"></script>
-  <script src="src/ThemeProvider.js?v=20260420"></script>
-  <script src="src/components/ThemeSwitcher.js?v=20260420"></script>
-
+  <title>超級瑪利歐：雙寶金幣收集戰</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
 
-    /* ── CSS 自訂屬性：由 ThemeProvider 動態注入，此處為安全預設值 ── */
     :root {
-      --theme-primary:   #43B047;
-      --theme-secondary: #049CD8;
-      --theme-accent:    #FBD000;
-      --theme-danger:    #E52521;
-      --theme-bg:        #5CB8FF;
-      --theme-text:      #333333;
-      --text-dark:       #333;
+      --mario-red: #E52521; --mario-blue: #049CD8; --mario-green: #43B047; --mario-yellow: #FBD000;
+      --bg-sky: #5CB8FF; --text-dark: #333;
     }
 
     body {
       font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-      background-color: var(--theme-bg);
-      margin: 0; padding: 15px;
-      color: var(--theme-text);
+      background-color: var(--bg-sky); margin: 0; padding: 15px; color: var(--text-dark);
       background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 10%, transparent 10.5%),
                         radial-gradient(circle at 80% 60%, rgba(255,255,255,0.4) 15%, transparent 15.5%);
       background-attachment: fixed;
-      transition: background-color 0.4s, color 0.4s;
     }
 
     .container { max-width: 800px; margin: 0 auto; padding-bottom: 80px; }
 
-    /* ── HUD ── */
+    /* HUD */
     .hud {
       background: rgba(0, 0, 0, 0.85); color: white; padding: 15px 20px; border-radius: 15px;
       display: flex; justify-content: space-between; align-items: center; font-size: 24px;
-      font-family: 'Fredoka One', sans-serif; border: 4px solid white;
-      box-shadow: 0 6px 0 rgba(0,0,0,0.5);
+      font-family: 'Fredoka One', sans-serif; border: 4px solid white; box-shadow: 0 6px 0 rgba(0,0,0,0.5);
       position: sticky; top: 10px; z-index: 100; margin-bottom: 25px;
     }
     .player-profile { display: flex; align-items: center; gap: 15px; }
     .avatar-img {
-      width: 60px; height: 60px; border-radius: 50%;
-      border: 3px solid var(--theme-accent);
-      background-color: white;
-      background-size: cover; background-position: center;
-      box-shadow: 0 0 10px rgba(251, 208, 0, 0.5);
-      transition: transform 0.3s;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 30px; line-height: 1; cursor: pointer;
-      flex-shrink: 0;
+      width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--mario-yellow);
+      object-fit: cover; background-color: white; box-shadow: 0 0 10px rgba(251, 208, 0, 0.5); transition: transform 0.3s;
     }
     .player-select {
-      background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white;
-      border-radius: 8px; padding: 5px 10px;
-      font-family: 'Fredoka One', 'Microsoft JhengHei', sans-serif;
-      font-size: 20px; cursor: pointer; outline: none;
+      background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; border-radius: 8px;
+      padding: 5px 10px; font-family: 'Fredoka One', 'Microsoft JhengHei', sans-serif; font-size: 20px; cursor: pointer; outline: none;
     }
-    .player-select option { color: #333; font-family: 'Segoe UI', sans-serif; font-weight: bold; }
-
-    .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .player-select option { color: #333; font-family: 'Segoe UI', sans-serif; font-weight: bold;}
     .hud-info { display: flex; gap: 15px; align-items: center; }
+    .coin-text { color: var(--mario-yellow); text-shadow: 2px 2px 0 #b49100; font-size: 28px; }
+    .star-text { color: var(--mario-yellow); text-shadow: 2px 2px 0 #d97700; font-size: 28px; filter: drop-shadow(0 0 8px #FFD700); }
 
-    /* 後端狀態燈 */
-    .backend-status {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; color: rgba(255,255,255,0.7);
-      font-family: 'Segoe UI', sans-serif;
-    }
-    .status-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #4CAF50;
-      box-shadow: 0 0 6px #4CAF50;
-      transition: background 0.4s, box-shadow 0.4s;
-    }
-    .status-dot.offline {
-      background: #f44336;
-      box-shadow: 0 0 6px #f44336;
-      animation: pulse-red 1.2s infinite;
-    }
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.4; }
-    }
-
-    /* 代幣 / 獎勵顯示文字（顏色來自主題） */
-    .token-text  { color: var(--theme-accent); text-shadow: 2px 2px 0 #b49100; font-size: 28px; }
-    .reward-text { color: var(--theme-accent); text-shadow: 2px 2px 0 #d97700; font-size: 28px;
-                   filter: drop-shadow(0 0 8px #FFD700); }
-
-    /* ── Theme Switcher ── */
-    .theme-switcher { display: flex; gap: 6px; }
-    .theme-btn {
-      background: rgba(255,255,255,0.15); color: white;
-      border: 1px solid rgba(255,255,255,0.4);
-      border-radius: 20px; padding: 3px 10px; font-size: 12px;
-      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
-      cursor: pointer; transition: background 0.2s, border-color 0.2s;
-    }
-    .theme-btn:hover  { background: rgba(255,255,255,0.3); }
-    .theme-btn.active { background: var(--theme-accent); color: #333;
-                        border-color: var(--theme-accent); font-weight: bold; }
-
-    /* ── 手風琴面板 ── */
-    details { background: white; border: 4px solid #000; border-radius: 16px;
-              margin-bottom: 20px; box-shadow: 6px 6px 0 rgba(0,0,0,0.2); overflow: hidden; }
-    summary { font-size: 22px; font-weight: bold; padding: 18px 20px; cursor: pointer;
-              user-select: none; display: flex; align-items: center; justify-content: space-between;
-              background: #f8f9fa; transition: background 0.2s; }
+    /* 手風琴面板 */
+    details { background: white; border: 4px solid #000; border-radius: 16px; margin-bottom: 20px; box-shadow: 6px 6px 0 rgba(0,0,0,0.2); overflow: hidden; }
+    summary { font-size: 22px; font-weight: bold; padding: 18px 20px; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; background: #f8f9fa; transition: background 0.2s; }
     summary::-webkit-details-marker { display: none; }
     summary:after { content: '▼'; font-size: 16px; color: #666; transition: transform 0.3s; }
     details[open] summary:after { transform: rotate(180deg); }
-    details.theme-good    summary { background: #e8f5e9; color: #2e7d32; border-bottom: 4px solid #c8e6c9; }
-    details.theme-bad     summary { background: #ffebee; color: #c62828; border-bottom: 4px solid #ffcdd2; }
-    details.theme-shop    summary { background: #e3f2fd; color: #1565c0; border-bottom: 4px solid #bbdefb; }
+    details.theme-good summary { background: #e8f5e9; color: #2e7d32; border-bottom: 4px solid #c8e6c9; }
+    details.theme-bad summary { background: #ffebee; color: #c62828; border-bottom: 4px solid #ffcdd2; }
+    details.theme-shop summary { background: #e3f2fd; color: #1565c0; border-bottom: 4px solid #bbdefb; }
     details.theme-history summary { background: #f3e5f5; color: #6a1b9a; border-bottom: 4px solid #e1bee7; }
 
     .task-list { padding: 15px; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-    .task-item { display: flex; justify-content: space-between; align-items: center;
-                 background: #fff; padding: 12px 15px; border-radius: 12px;
-                 border: 3px solid #e9ecef; font-size: 18px; font-weight: 600;
-                 color: var(--text-dark); }
-
-    .history-log  { background: #fafafa; flex-direction: column; align-items: flex-start;
-                    gap: 5px; border-left: 6px solid #9c27b0; }
+    .task-item { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 12px; border: 3px solid #e9ecef; font-size: 18px; font-weight: 600; }
+    
+    .history-log { background: #fafafa; flex-direction: column; align-items: flex-start; gap: 5px; border-left: 6px solid #9c27b0; }
     .history-time { font-size: 14px; color: #888; font-weight: normal; }
     .history-title { color: var(--text-dark); font-size: 18px; }
 
-    /* ── 自訂兌換區 ── */
-    .custom-shop-box { background: #fff; padding: 15px; border-radius: 12px;
-                       border: 3px dashed var(--theme-secondary); margin-top: 10px;
-                       display: flex; flex-direction: column; gap: 10px; }
-    .custom-shop-title { color: var(--theme-secondary); font-weight: bold; font-size: 18px; margin: 0; }
-    .custom-input { padding: 12px; border-radius: 8px; border: 2px solid #bbdefb; font-size: 18px;
-                    outline: none; font-family: 'Segoe UI', sans-serif; width: 100%; box-sizing: border-box;
-                    color: var(--text-dark); background: #fff; }
+    /* 自訂兌換區 */
+    .custom-shop-box { background: #fff; padding: 15px; border-radius: 12px; border: 3px dashed var(--mario-blue); margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
+    .custom-shop-title { color: var(--mario-blue); font-weight: bold; font-size: 18px; margin: 0;}
+    .custom-input { padding: 12px; border-radius: 8px; border: 2px solid #bbdefb; font-size: 18px; outline: none; font-family: 'Segoe UI', sans-serif; width: 100%; box-sizing: border-box; }
     .custom-row { display: flex; gap: 10px; }
 
-    /* ── 按鈕 ── */
-    .btn { min-width: 54px; min-height: 54px; border-radius: 12px; border: 4px solid #000;
-           font-size: 20px; font-weight: bold; font-family: 'Fredoka One', sans-serif;
-           cursor: pointer; display: flex; align-items: center; justify-content: center;
-           box-shadow: inset -3px -3px 0 rgba(0,0,0,0.3); transition: transform 0.1s; padding: 0 15px; }
+    /* 按鈕 */
+    .btn { min-width: 54px; min-height: 54px; border-radius: 12px; border: 4px solid #000; font-size: 20px; font-weight: bold; font-family: 'Fredoka One', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: inset -3px -3px 0 rgba(0,0,0,0.3); transition: transform 0.1s; padding: 0 15px; }
     .btn:active { transform: translateY(4px); box-shadow: none; }
-    .btn-question  { background: var(--theme-accent); color: #c07a00; font-size: 26px; padding: 0; }
-    .btn-deduct    { background: var(--theme-danger);    color: white; }
-    .btn-shop      { background: var(--theme-secondary); color: white; }
+    .btn-question { background: var(--mario-yellow); color: #c07a00; font-size: 26px; padding: 0;}
+    .btn-goomba { background: var(--mario-red); color: white; }
+    .btn-shop { background: var(--mario-blue); color: white; }
     .btn-shop:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; opacity: 0.7; }
-    .btn-completed { background: #e0e0e0 !important; color: #888 !important;
-                     border-color: #aaa !important; box-shadow: none !important; cursor: not-allowed !important; }
+    .btn-completed { background: #e0e0e0 !important; color: #888 !important; border-color: #aaa !important; box-shadow: none !important; cursor: not-allowed !important; }
 
     .sys-controls { text-align: center; margin-top: 30px; }
-    .btn-export { background: #333; color: white; border: none; padding: 15px 30px;
-                  font-size: 18px; border-radius: 50px; cursor: pointer; }
+    .btn-export { background: #333; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 50px; cursor: pointer; }
+    .anim-float { position: absolute; font-size: 36px; pointer-events: none; animation: floatUp 0.8s ease-out forwards; z-index: 999; }
+    @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-80px) scale(1.5); opacity: 0; } }
 
-    .anim-float { position: absolute; font-size: 36px; pointer-events: none;
-                  animation: floatUp 0.8s ease-out forwards; z-index: 999; }
-    @keyframes floatUp {
-      0%   { transform: translateY(0) scale(1);   opacity: 1; }
-      100% { transform: translateY(-80px) scale(1.5); opacity: 0; }
-    }
-
-    /* ── 管理員密碼 Modal ── */
-    .admin-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                           background: rgba(0,0,0,0.7); z-index: 2000;
-                           justify-content: center; align-items: center; }
-    .admin-modal-box { background: white; padding: 25px; border-radius: 12px; text-align: center;
-                       width: 80%; max-width: 300px; border: 4px solid #000;
-                       box-shadow: 6px 6px 0 rgba(0,0,0,0.5); }
-    .admin-modal-box h3  { margin-top: 0; color: #333; }
-    .admin-modal-box input { width: 100%; padding: 12px; margin-bottom: 20px; box-sizing: border-box;
-                             font-size: 24px; text-align: center; border: 2px solid #ccc;
-                             border-radius: 8px; outline: none; }
-    .admin-modal-box input:focus { border-color: var(--theme-secondary); }
-    .modal-btns        { display: flex; gap: 10px; justify-content: space-between; }
-    .modal-btns button { flex: 1; padding: 12px; font-size: 18px; font-weight: bold;
-                         border-radius: 8px; border: 3px solid #000; cursor: pointer; }
-    .btn-cancel  { background: #e0e0e0; color: #333; }
-    .btn-confirm { background: var(--theme-secondary); color: white; }
-
-    /* ── 小提琴進度條 ── */
-    .violin-weekly-box {
-      background: #fff;
-      color: var(--text-dark);
-      padding: 12px 16px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      border: 1px solid #e5e7eb;
-      border-left: 6px solid var(--theme-secondary);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .violin-slots { display: flex; gap: 10px; }
-    .v-slot {
-      width: 45px; height: 45px; border: 3px dashed #ccc; border-radius: 12px;
-      display: flex; align-items: center; justify-content: center; font-size: 22px;
-      cursor: pointer; transition: 0.2s; position: relative; background: #fafafa;
-    }
-    .v-slot:hover  { background: #f0f0f0; border-color: #999; }
-    .v-slot.filled { border: 3px solid var(--theme-accent); background: #FFF9D2; cursor: default; }
-
-    @keyframes popCoin {
-      0%   { transform: translateY(0) scale(1);    opacity: 1; }
-      50%  { transform: translateY(-40px) scale(1.5); opacity: 1; }
-      100% { transform: translateY(-60px) scale(1); opacity: 0; }
-    }
-    .floating-coin {
-      position: absolute; top: 0; left: 10px; font-size: 30px;
-      animation: popCoin 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
-      pointer-events: none; z-index: 50;
-    }
   </style>
 </head>
 <body>
@@ -225,22 +88,15 @@
   <div class="container">
     <div class="hud">
       <div class="player-profile">
-        <div id="avatar-img" class="avatar-img"></div>
+        <img id="avatar-img" src="images/mario.jpeg" alt="Player Avatar" class="avatar-img">
         <select class="player-select" id="player-selector" onchange="switchPlayer()">
           <option value="kyle">👦 哥哥 Kyle</option>
           <option value="ryder">👦 弟弟 Ryder</option>
         </select>
       </div>
-      <div class="hud-right">
-        <div class="hud-info">
-          <div><span class="token-text"  id="token-emoji">🟡</span> x <span id="ui-coins">0</span></div>
-          <div><span class="reward-text" id="reward-emoji">🌟</span> x <span id="ui-stars">0</span></div>
-        </div>
-        <div id="theme-switcher-mount"></div>
-        <div class="backend-status">
-          <div class="status-dot" id="status-dot"></div>
-          <span id="status-label">連線中</span>
-        </div>
+      <div class="hud-info">
+        <div><span class="coin-text">🟡</span> x <span id="ui-coins">0</span></div>
+        <div><span class="star-text">🌟</span> x <span id="ui-stars">0</span></div>
       </div>
     </div>
 
@@ -256,136 +112,132 @@
     </div>
   </div>
 
-  <div id="admin-modal" class="admin-modal-overlay">
-    <div class="admin-modal-box">
-      <h3>系統管理員</h3>
-      <input type="password" id="admin-pwd" placeholder="請輸入密碼">
-      <div class="modal-btns">
-        <button class="btn-cancel"  onclick="closeAdminModal()">取消</button>
-        <button class="btn-confirm" onclick="verifyAdmin()">登入</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-
-    /* ── 核心狀態 (不可動) ── */
-    /* 本機開發打 127.0.0.1，正式（GitHub Pages）打 Fly 後端 */
-    const IS_LOCAL = ["localhost", "127.0.0.1"].includes(location.hostname);
-    const API_BASE = IS_LOCAL
-      ? "http://127.0.0.1:8000/api"
-      : "https://good-hobbies-api.fly.dev/api";
-    /* 共用靜態 Bearer token：擋隨機掃描，非機密等級驗證（靜態前端原始碼可見） */
-    const API_TOKEN = "X41KmzEmT7GrwB7jhOsOl908SuMcYcgrOjSsb73iD1w";
-
-    /* 統一 fetch：自動帶 Authorization 與 Content-Type */
-    function apiFetch(path, opts = {}) {
-      const headers = Object.assign({}, opts.headers || {}, {
-        "Authorization": "Bearer " + API_TOKEN,
-      });
-      return fetch(`${API_BASE}${path}`, Object.assign({}, opts, { headers }));
+    function resolveApiBase() {
+      // 手動覆寫（localStorage）優先
+      try {
+        const override = localStorage.getItem('api_base_override');
+        if (override && override.trim()) return override.trim().replace(/\/+$/, '');
+      } catch (_) {}
+      const host = (location && location.hostname) || '';
+      // 本機開發：打 127.0.0.1:8001
+      if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:8001/api';
+      // GitHub Pages（靜態站，無同源後端）：打 Fly 後端
+      if (host.endsWith('github.io')) return 'https://good-hobbies-api.fly.dev/api';
+      // 其餘（如 EC2 nginx 反向代理）走同源 /api
+      if (location && location.origin && location.origin !== 'null') return `${location.origin}/api`;
+      return 'https://good-hobbies-api.fly.dev/api';
     }
-    let   allTasksData  = {};
-    let   currentPlayer = 'kyle';
-    let   currentTasks  = [];
-    let   totalCoins    = 0;
-    let   behaviorLogs  = [];
-    let   completedTasks = [];
+
+    const API_BASE = resolveApiBase();
+    const API_TOKEN = "qsqMoZRQnCaEZVcCpahSbE2I-S1uflOLusaexs3k1u0";
+    const playerConfig = { 'kyle': { avatar: 'images/mario.jpeg' }, 'ryder': { avatar: 'images/yoshi.jpeg' } };
+    let allTasksData = {}; 
+    let currentPlayer = 'kyle'; 
+    let currentTasks = []; 
+    let totalCoins = 0; 
+    let behaviorLogs = []; 
+    let completedTasks = []; 
     const COINS_PER_STAR = 10;
 
-    /* ── 後端狀態燈 ── */
-    function setBackendStatus(online) {
-      const dot   = document.getElementById('status-dot');
-      const label = document.getElementById('status-label');
-      if (!dot) return;
-      if (online) {
-        dot.classList.remove('offline');
-        label.innerText = '已連線';
-      } else {
-        dot.classList.add('offline');
-        label.innerText = '後端離線';
-      }
+    async function fetchJsonOrText(res) {
+      const contentType = (res.headers.get('content-type') || '').toLowerCase();
+      try {
+        if (contentType.includes('application/json')) return await res.json();
+      } catch (e) {}
+      return await res.text();
     }
 
-    /* ── 主題感知的玩家頭像（純 UI 呈現層）── */
-    /* 支援圖片路徑與 Emoji 兩種模式，依 themeConfig.assets 自動切換 */
-    function setPlayerAvatar(playerId) {
-      var assets  = themeProvider.current.assets;
-      var el      = document.getElementById('avatar-img');
-      var isKyle  = (playerId === 'kyle');
-      var imgPath = isKyle ? assets.player1Avatar : assets.player2Avatar;
-      var emoji   = isKyle ? assets.player1Emoji  : assets.player2Emoji;
+    async function apiFetch(url, options = {}) {
+      const method = (options.method || 'GET').toUpperCase();
+      const headers = { ...(options.headers || {}) };
 
-      if (imgPath) {
-        el.style.backgroundImage = "url('" + imgPath + "')";
-        el.innerText = '';
-      } else {
-        el.style.backgroundImage = 'none';
-        el.innerText = emoji || '👤';
+      // V2.2：所有 API 呼叫都需帶 Authorization Bearer token（含 GET /api/status）
+      headers['Authorization'] = `Bearer ${API_TOKEN}`;
+
+      const res = await fetch(url, { ...options, method, headers });
+      const payload = await fetchJsonOrText(res);
+      if (!res.ok) {
+        const msg =
+          (payload && typeof payload === 'object' && (payload.detail || payload.message)) ||
+          (typeof payload === 'string' && payload.trim()) ||
+          `HTTP ${res.status}`;
+        throw new Error(msg);
       }
+      return payload;
     }
 
-    /* ════════════════════════════════════════════════
-       資料載入 (邏輯不動，僅更新 localStorage key 與頭像來源)
-       ════════════════════════════════════════════════ */
+    async function refreshStatus() {
+      const [data, logs] = await Promise.all([
+        apiFetch(`${API_BASE}/status`),
+        apiFetch(`${API_BASE}/transactions/${currentPlayer}?limit=100`).catch(() => []),
+      ]);
+      const users = Array.isArray(data.users) ? data.users : [];
+      const me = users.find(u => u && u.name === currentPlayer);
+      totalCoins = me && Number.isFinite(Number(me.current_coins)) ? Number(me.current_coins) : 0;
+      behaviorLogs = Array.isArray(logs) ? logs : [];
+      // 從後端 Ledger 取得「今天已記過分的任務」，畫面一載入就鎖定不可再勾選
+      completedTasks = Array.isArray(me && me.completed_task_ids_today)
+        ? [...me.completed_task_ids_today]
+        : [];
+      updateUI();
+      return data;
+    }
+
     async function loadConfigAndInit() {
       try {
-        const response = await fetch('tasks.json');
-        if (response.ok) {
-          allTasksData = await response.json();
-        } else {
-          console.warn("⚠️ tasks.json 讀取失敗，狀態碼：", response.status);
-        }
+        allTasksData = await apiFetch(`${API_BASE}/tasks`);
+        console.log("任務清單讀取成功（API）", allTasksData);
       } catch (error) {
-        console.warn("⚠️ 無法讀取 tasks.json：", error);
+        console.warn("⚠️ API 任務清單失敗，改讀取本機 tasks.json", error?.message || error);
+        try {
+          const response = await fetch('tasks.json');
+          if (response.ok) {
+            allTasksData = await response.json();
+          }
+        } catch (e) {
+          console.warn("⚠️ tasks.json 也讀取失敗", e?.message || e);
+        }
       }
-
-      const savedPlayer = localStorage.getItem('app_last_player');
-      if (savedPlayer && ['kyle', 'ryder'].includes(savedPlayer)) currentPlayer = savedPlayer;
+      
+      const savedPlayer = localStorage.getItem('mario_last_player');
+      if (savedPlayer && playerConfig[savedPlayer]) currentPlayer = savedPlayer;
       document.getElementById('player-selector').value = currentPlayer;
-
-      await loadPlayerData();
+      
+      // 確保在載入玩家資料前，已經取得任務清單
+      await loadPlayerData(); 
     }
 
     async function switchPlayer() {
       currentPlayer = document.getElementById('player-selector').value;
-      localStorage.setItem('app_last_player', currentPlayer);
+      localStorage.setItem('mario_last_player', currentPlayer);
       await loadPlayerData();
     }
 
     async function loadPlayerData() {
       const img = document.getElementById('avatar-img');
-      setPlayerAvatar(currentPlayer);
+      img.src = playerConfig[currentPlayer].avatar;
       img.style.transform = 'scale(1.2)';
       setTimeout(() => img.style.transform = 'scale(1)', 200);
 
       currentTasks = [...(allTasksData[currentPlayer] || []), ...(allTasksData['common'] || [])];
 
+      renderApp(); 
       try {
-        const res = await apiFetch(`/player/${currentPlayer}`);
-        if (res.ok) {
-          const data = await res.json();
-          totalCoins    = data.total_coins;
-          behaviorLogs  = data.logs;
-          completedTasks = data.completed_tasks;
-          setBackendStatus(true);
-        }
+        await refreshStatus();
       } catch (error) {
-        console.error("API 連線失敗", error);
-        setBackendStatus(false);
+        alert(`API 連線失敗：${error.message || error}`);
+        totalCoins = 0;
+        behaviorLogs = [];
+        completedTasks = [];
+        updateUI();
       }
-
-      renderApp();
-      updateUI();
     }
 
-    /* ════════════════════════════════════════════════
-       UI Render
-       ════════════════════════════════════════════════ */
     function renderApp() {
       const container = document.getElementById('app-content');
       container.innerHTML = '';
-
+      
       currentTasks.forEach(category => {
         if (!category.isActive) return;
         const details = document.createElement('details');
@@ -400,16 +252,6 @@
         list.className = 'task-list';
 
         category.tasks.forEach(task => {
-
-          /* SA 攔截點：小提琴任務改用客製化 UI */
-          if (task.id === 'violin_practice') {
-            const vContainer = document.createElement('div');
-            vContainer.id = 'violin-progress-container';
-            vContainer.style.margin = "10px 0";
-            list.appendChild(vContainer);
-            return;
-          }
-
           const item = document.createElement('div');
           item.className = 'task-item';
           let btnHTML = '';
@@ -434,9 +276,9 @@
           customBox.className = 'custom-shop-box';
           customBox.innerHTML = `
             <p class="custom-shop-title">✍️ 自訂願望兌換</p>
-            <input type="text"   id="custom-name" class="custom-input" placeholder="例如：買一個扭蛋、吃冰淇淋">
+            <input type="text" id="custom-name" class="custom-input" placeholder="例如：買一個扭蛋、吃冰淇淋">
             <div class="custom-row">
-              <input type="number" id="custom-cost" class="custom-input" placeholder="星數" min="1" style="width: 100px;">
+              <input type="number" id="custom-cost" class="custom-input" placeholder="🌟星數" min="1" style="width: 100px;">
               <button class="btn btn-shop" onclick="handleCustomShopClick()" style="flex-grow: 1;">確認兌換</button>
             </div>
           `;
@@ -445,267 +287,133 @@
         details.appendChild(list);
         container.appendChild(details);
       });
-
-      if (typeof renderViolinBar === 'function') renderViolinBar();
     }
 
-    /* ════════════════════════════════════════════════
-       核心業務邏輯 (嚴格保留，不修改計算邏輯)
-       ════════════════════════════════════════════════ */
     function handleShopClick(name, costStars) { processExchange(name, costStars); }
 
     function handleCustomShopClick() {
-      const nameInput  = document.getElementById('custom-name');
-      const costInput  = document.getElementById('custom-cost');
-      const name       = nameInput.value.trim();
-      const costStars  = parseInt(costInput.value);
-      if (!name)                          { alert("請輸入想要兌換的願望喔！"); return; }
-      if (!costStars || costStars <= 0)   { alert("請輸入需要花費的星星數量！"); return; }
+      const nameInput = document.getElementById('custom-name');
+      const costInput = document.getElementById('custom-cost');
+      const name = nameInput.value.trim();
+      const costStars = parseInt(costInput.value);
+      if (!name) { alert("請輸入想要兌換的願望喔！"); return; }
+      if (!costStars || costStars <= 0) { alert("請輸入需要花費的星星數量！"); return; }
       processExchange(`✨ ${name} (自訂願望)`, costStars).then(success => {
-        if (success) { nameInput.value = ''; costInput.value = ''; }
+          if (success) { nameInput.value = ''; costInput.value = ''; }
       });
     }
 
     async function processExchange(name, costStars) {
-      const costCoins    = costStars * COINS_PER_STAR;
-      const rewardEmoji  = themeProvider.current.terminology.rewardEmoji;
+      const costCoins = costStars * COINS_PER_STAR;
       if (totalCoins >= costCoins) {
-        if (confirm(`確定要花費 ${costStars} 顆${rewardEmoji}兌換【${name}】嗎？`)) {
-          totalCoins -= costCoins;
-          updateUI();
-          await sendActionToBackend('shop_custom', name, -costCoins, 'shop_spend');
-          alert("🎉 兌換成功！已記錄到存摺。");
-          return true;
+        if (confirm(`確定要花費 ${costStars} 顆🌟兌換【${name}】嗎？`)) {
+          try {
+            await sendActionToBackend('shop_custom', name, -costCoins, 'shop_spend');
+            alert("🎉 兌換成功！已記錄到存摺。");
+            return true;
+          } catch (e) {
+            alert(`兌換失敗：${e.message || e}`);
+            return false;
+          }
         }
-      } else {
-        alert(`星星不夠喔！需要 ${costStars} 顆${rewardEmoji}`);
-      }
+      } else { alert(`星星不夠喔！需要 ${costStars} 顆🌟`); }
       return false;
     }
 
     async function handleTaskClick(btnElement, id, name, points, type) {
       if (type === 'lose' && totalCoins < Math.abs(points)) { alert("已經沒有金幣可以扣了！"); return; }
-
+      
+      // 樂觀更新 (先改畫面讓使用者感覺順暢)
       if (type === 'earn') {
         if (completedTasks.includes(id)) return;
         completedTasks.push(id);
       }
-      totalCoins += points;
-      const tokenEmoji = themeProvider.current.terminology.tokenEmoji;
-      playFloatAnim(btnElement, points > 0 ? `+${points}${tokenEmoji}` : `${points}${tokenEmoji}`);
+      totalCoins += points; 
+      playFloatAnim(btnElement, points > 0 ? `+${points}🟡` : `${points}🟡`); 
       updateUI();
       if (type === 'earn') renderApp();
 
-      await sendActionToBackend(id, name, points, type);
+      // 同步發送至後端
+      try {
+        await sendActionToBackend(id, name, points, type);
+      } catch (e) {
+        alert(`操作失敗：${e.message || e}`);
+        await refreshStatus(); // 以後端為準把畫面校正回來
+        renderApp();
+      }
     }
 
     async function sendActionToBackend(taskId, taskName, points, actionType) {
-      try {
-        await apiFetch(`/action`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            player_id:   currentPlayer,
-            task_id:     taskId,
-            task_name:   taskName,
-            points:      points,
-            action_type: actionType
-          })
-        });
-        await loadPlayerData();
-      } catch (error) {
-        console.error("API 寫入失敗", error);
-        alert("⚠️ 後端連線失敗！資料可能未儲存。\n請確認伺服器是否啟動，並重新整理頁面。");
-        await loadPlayerData().catch(() => {});
-      }
+      const reason = `${actionType}:${taskId}:${taskName}`;
+      await apiFetch(`${API_BASE}/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_name: currentPlayer,
+          delta: points,
+          reason: reason
+        })
+      });
+
+      // POST 成功後：強制重新抓 status 讓上排數字即時更新
+      await refreshStatus();
     }
 
-    /* ── UI 更新 ── */
     function updateUI() {
       if (totalCoins < 0) totalCoins = 0;
-      const term  = themeProvider.current.terminology;
-      const stars = Math.floor(totalCoins / COINS_PER_STAR);
-      const coins = totalCoins % COINS_PER_STAR;
-      document.getElementById('ui-coins').innerText  = coins;
-      document.getElementById('ui-stars').innerText  = stars;
-      document.getElementById('token-emoji').innerText  = term.tokenEmoji;
-      document.getElementById('reward-emoji').innerText = term.rewardEmoji;
-      document.querySelectorAll('.btn-shop').forEach(btn => {
-        btn.disabled = stars < parseInt(btn.dataset.cost);
-      });
-      renderHistory();
+      const stars = Math.floor(totalCoins / COINS_PER_STAR); const coins = totalCoins % COINS_PER_STAR;
+      document.getElementById('ui-coins').innerText = coins; document.getElementById('ui-stars').innerText = stars;
+      document.querySelectorAll('.btn-shop').forEach(btn => btn.disabled = stars < parseInt(btn.dataset.cost));
+      renderHistory(); 
     }
 
     function renderHistory() {
-      const container = document.getElementById('history-container');
-      container.innerHTML = '';
+      const container = document.getElementById('history-container'); container.innerHTML = '';
       const shopLogs = behaviorLogs.filter(log => log.action_type === 'shop_spend');
-      if (shopLogs.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding: 20px; color:#888;">目前還沒有兌換紀錄喔！</div>`;
-        return;
-      }
-      const rewardEmoji = themeProvider.current.terminology.rewardEmoji;
+      if (shopLogs.length === 0) { container.innerHTML = `<div style="text-align:center; padding: 20px; color:#888;">目前還沒有兌換紀錄喔！</div>`; return; }
+
       shopLogs.forEach(log => {
-        const item = document.createElement('div');
-        item.className = 'task-item history-log';
+        const item = document.createElement('div'); item.className = 'task-item history-log';
         const starsSpent = Math.abs(log.point_change) / COINS_PER_STAR;
         item.innerHTML = `
           <div class="history-time">${log.timestamp}</div>
           <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
             <span class="history-title">${log.task_name}</span>
-            <span style="color: #9c27b0; font-weight: bold; font-family: 'Fredoka One', sans-serif;">
-              -${rewardEmoji}x${starsSpent}
-            </span>
+            <span style="color: #9c27b0; font-weight: bold; font-family: 'Fredoka One', sans-serif;">-🌟x${starsSpent}</span>
           </div>`;
         container.appendChild(item);
       });
     }
 
     function playFloatAnim(targetBtn, text) {
-      const rect = targetBtn.getBoundingClientRect();
-      const anim = document.createElement('div');
-      anim.className  = 'anim-float';
-      anim.innerText  = text;
-      anim.style.left = (rect.left + 10) + 'px';
-      anim.style.top  = (rect.top - 20 + window.scrollY) + 'px';
-      document.body.appendChild(anim);
-      setTimeout(() => anim.remove(), 800);
+      const rect = targetBtn.getBoundingClientRect(); const anim = document.createElement('div');
+      anim.className = 'anim-float'; anim.innerText = text;
+      anim.style.left = (rect.left + 10) + 'px'; anim.style.top = (rect.top - 20 + window.scrollY) + 'px';
+      document.body.appendChild(anim); setTimeout(() => anim.remove(), 800);
     }
 
     function exportLogsToCSV() {
       if (behaviorLogs.length === 0) { alert("目前還沒有紀錄喔！"); return; }
-      const label = themeProvider.current.terminology.exportLabel;
       let csvContent = "data:text/csv;charset=utf-8,\uFEFF時間,任務名稱,類型,金幣變動\n";
-      behaviorLogs.forEach(r => {
-        csvContent += `${r.timestamp},${r.task_name},${r.action_type},${r.point_change}\n`;
-      });
-      const link = document.createElement("a");
-      link.setAttribute("href", encodeURI(csvContent));
-      link.setAttribute("download", `${currentPlayer}_${label}_${new Date().toISOString().slice(0,10)}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      behaviorLogs.forEach(r => csvContent += `${r.timestamp},${r.task_name},${r.action_type},${r.point_change}\n`);
+      const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+      link.setAttribute("download", `${currentPlayer}_瑪利歐行為紀錄_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
-    /* ── 管理員 ── */
-    let avatarClickCount = 0;
-    let avatarClickTimer;
+    // 頭像連點五下 → 直接進入任務管理頁（該頁有獨立密碼視窗）
+    let avatarClickCount = 0; let avatarClickTimer;
     document.getElementById('avatar-img').addEventListener('click', () => {
       avatarClickCount++;
       clearTimeout(avatarClickTimer);
       avatarClickTimer = setTimeout(() => { avatarClickCount = 0; }, 2000);
       if (avatarClickCount >= 5) {
         avatarClickCount = 0;
-        document.getElementById('admin-pwd').value = '';
-        document.getElementById('admin-modal').style.display = 'flex';
+        window.location.href = 'admin-tasks.html';
       }
     });
 
-    function closeAdminModal() { document.getElementById('admin-modal').style.display = 'none'; }
-
-    async function verifyAdmin() {
-      const pwd = document.getElementById('admin-pwd').value;
-      if (pwd === "2738") {
-        closeAdminModal();
-        const tokenEmoji = themeProvider.current.terminology.tokenEmoji;
-        const adjust = prompt(
-          `目前 ${currentPlayer} 有 ${totalCoins} 枚${tokenEmoji}\n請輸入要「增減」的數量。\n若要全面初始化請輸入 reset：`
-        );
-        if (adjust === "reset") {
-          if (confirm(`⚠️ 確定要將【${currentPlayer}】的所有資料恢復到最原始狀態嗎？`)) {
-            try {
-              await apiFetch(`/admin/reset/${currentPlayer}`, { method: 'POST' });
-              await loadPlayerData();
-              alert(`✅ ${currentPlayer} 的資料已重置`);
-            } catch(e) { alert("重置失敗！請確認後端是否啟動"); }
-          }
-        } else if (adjust && !isNaN(adjust)) {
-          const change = parseInt(adjust);
-          await sendActionToBackend('admin_adjust', '🔧 系統管理員手動調整', change, 'admin_adjust');
-          alert(`✅ 點數修改成功！已調整 ${change} 枚${tokenEmoji}`);
-        }
-      } else {
-        alert("❌ 密碼錯誤");
-        closeAdminModal();
-      }
-    }
-
-    /* ── 主題切換時同步更新頭像與 HUD ── */
-    document.addEventListener('themechange', function () {
-      setPlayerAvatar(currentPlayer);
-      updateUI();
-    });
-
-    /* ── 啟動 ── */
-    renderThemeSwitcher('theme-switcher-mount');
     loadConfigAndInit();
-
-    /* 每 30 秒心跳檢查，後端掉線立即亮紅燈 */
-    setInterval(async function () {
-      try {
-        const res = await apiFetch(`/player/${currentPlayer}`, { method: 'HEAD' });
-        setBackendStatus(true);
-      } catch (_) {
-        setBackendStatus(false);
-      }
-    }, 30000);
-
-    /* ════════════════════════════════════════════════
-       小提琴進度條專屬邏輯
-       ════════════════════════════════════════════════ */
-    function getWeeklyKey() {
-      const d = new Date();
-      d.setHours(0, 0, 0, 0);
-      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-      const yearStart = new Date(d.getFullYear(), 0, 1);
-      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-      return `violin_week_${d.getFullYear()}_${weekNo}`;
-    }
-
-    function renderViolinBar() {
-      const container = document.getElementById('violin-progress-container');
-      if (!container) return;
-
-      const weekKey      = getWeeklyKey();
-      const practiceCount = parseInt(localStorage.getItem(weekKey) || '0');
-      const tokenEmoji   = themeProvider.current.terminology.tokenEmoji;
-
-      let slotsHtml = '';
-      for (let i = 1; i <= 2; i++) {
-        if (i <= practiceCount) {
-          slotsHtml += `<div class="v-slot filled">🎻</div>`;
-        } else {
-          slotsHtml += `<div class="v-slot" onclick="claimViolinCoin(this, ${practiceCount + 1})"></div>`;
-        }
-      }
-
-      container.innerHTML = `
-        <div class="violin-weekly-box">
-          <div style="font-weight: bold; font-size: 16px; color: var(--text-dark);">
-            🎻 本週小提琴練習進度 (每次領取 1 ${tokenEmoji})
-          </div>
-          <div class="violin-slots">${slotsHtml}</div>
-        </div>
-      `;
-    }
-
-    async function claimViolinCoin(element, newCount) {
-      const coin = document.createElement('div');
-      coin.className = 'floating-coin';
-      coin.innerText = themeProvider.current.terminology.tokenEmoji;
-      element.appendChild(coin);
-
-      await sendActionToBackend('violin_practice', '🎻 小提琴練琴打卡', 1, 'earn');
-
-      localStorage.setItem(getWeeklyKey(), newCount);
-      setTimeout(() => {
-        renderViolinBar();
-        loadPlayerData();
-      }, 1000);
-    }
-
-    renderViolinBar();
-
   </script>
 </body>
 </html>
