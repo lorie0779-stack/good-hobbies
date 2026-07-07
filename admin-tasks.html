@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理後台 - 瑪利歐金幣系統</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+    :root {
+      --mario-red: #E52521; --mario-blue: #049CD8; --mario-green: #43B047; --mario-yellow: #FBD000;
+      --bg-sky: #5CB8FF; --text-dark: #333;
+      /* Morandi-ish (muted) palette for admin UI */
+      --m-muted-ink: rgba(18, 18, 18, 0.78);
+      --m-muted-border: rgba(18, 18, 18, 0.18);
+      --m-muted-shadow: rgba(0, 0, 0, 0.14);
+      --m-muted-blue: #6f93b5;
+      --m-muted-green: #7fa38c;
+      --m-muted-red: #b07b7b;
+      --m-muted-yellow: #c7b27a;
+      --m-surface: rgba(255,255,255,0.92);
+    }
+    body {
+      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      background-color: var(--bg-sky); margin: 0; padding: 15px; color: var(--text-dark);
+      background-image: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 10%, transparent 10.5%),
+                        radial-gradient(circle at 80% 60%, rgba(255,255,255,0.4) 15%, transparent 15.5%);
+      background-attachment: fixed;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding-bottom: 40px; }
+    .fatal-banner{
+      position: sticky;
+      top: 10px;
+      z-index: 9999;
+      margin: 0 0 12px 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1.5px solid rgba(18,18,18,0.16);
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 14px 26px rgba(0,0,0,0.18);
+      font-weight: 700;
+      line-height: 1.25;
+      display: none;
+    }
+    .fatal-banner.err{ display:block; background:#ffebee; color:#c62828; border-color:#ffcdd2; }
+    .fatal-banner.ok{ display:block; background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9; }
+    .header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    .header-row h1 { margin: 0; color: var(--text-dark); font-family: 'Fredoka One', sans-serif; font-size: 28px; }
+    .btn-back {
+      min-height: 44px; padding: 10px 18px; border-radius: 14px;
+      border: 1.5px solid var(--m-muted-border);
+      font-size: 15px; font-weight: 700; font-family: 'Fredoka One', sans-serif; cursor: pointer;
+      background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.25)), var(--m-muted-blue);
+      color: rgba(255,255,255,0.96);
+      box-shadow: 0 10px 18px var(--m-muted-shadow), inset 0 1px 0 rgba(255,255,255,0.35);
+      text-decoration: none; display: inline-flex; align-items: center;
+    }
+    .btn-back:hover { color: white; }
+    .btn-back:active { transform: translateY(2px); box-shadow: 0 6px 12px var(--m-muted-shadow), inset 0 2px 8px rgba(0,0,0,0.12); }
+
+    /* Tab layout (like sketch): profile tabs row + sub tabs row */
+    .tabs-shell{
+      background: var(--m-surface);
+      border: 1.5px solid var(--m-muted-border);
+      border-radius: 18px;
+      box-shadow: 0 14px 26px var(--m-muted-shadow);
+      overflow: hidden;
+    }
+    .profile-tabs{
+      display:flex; gap:0; flex-wrap:wrap; align-items:stretch;
+      padding: 10px 10px 0 10px;
+      border-bottom: 1px solid rgba(18,18,18,0.10);
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18));
+    }
+    .profile-tab{
+      padding: 10px 16px;
+      border: 1px solid rgba(18,18,18,0.14);
+      border-bottom: none;
+      background: rgba(255,255,255,0.55);
+      color: var(--m-muted-ink);
+      cursor:pointer;
+      font-family:'Fredoka One', sans-serif;
+      font-size: 15px;
+      border-top-left-radius: 14px;
+      border-top-right-radius: 14px;
+      box-shadow: 0 8px 14px rgba(0,0,0,0.08);
+      margin-right: 8px;
+    }
+    .profile-tab:hover{ background: rgba(255,255,255,0.72); }
+    .profile-tab.active{
+      background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.25)), var(--m-muted-blue);
+      color: rgba(255,255,255,0.96);
+      border-color: rgba(18,18,18,0.16);
+    }
+    .profile-tab.add{
+      background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.2)), var(--m-muted-green);
+      color: rgba(255,255,255,0.96);
+    }
+    .sub-tabs-row{
+      display:flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.55);
+      border-bottom: 1px solid rgba(18,18,18,0.10);
+    }
+    .sub-tabs{
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items: center;
+    }
+    .tabs-msg{
+      flex: 1;
+      min-width: 220px;
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1.5px solid transparent;
+      font-weight: 600;
+      line-height: 1.2;
+      background: rgba(255,255,255,0.55);
+      color: rgba(18,18,18,0.60);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tabs-msg.ok { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+    .tabs-msg.err { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+    .tabs-msg.hidden { display: none; }
+
+    .tabs-content{
+      padding: 14px;
+      background: rgba(255,255,255,0.45);
+    }
+    .sub-tab{
+      padding: 9px 14px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(18,18,18,0.14);
+      background: rgba(255,255,255,0.6);
+      color: var(--m-muted-ink);
+      cursor:pointer;
+      font-family:'Fredoka One', sans-serif;
+      font-size: 14px;
+      box-shadow: 0 10px 18px rgba(0,0,0,0.10), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .sub-tab.active{
+      background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.25)), var(--m-muted-yellow);
+      color: rgba(18,18,18,0.78);
+    }
+    .profile-content { display: none; }
+    .profile-content.active { display: block; }
+    .sub-panel { display: none; }
+    .sub-panel.active { display: block; }
+
+    /* 解鎖畫面：與主站 admin modal 一致 */
+    .lock-screen {
+      background: white; padding: 25px; border-radius: 12px; text-align: center;
+      width: 90%; max-width: 320px; margin: 40px auto 0;
+      border: 4px solid #000; box-shadow: 6px 6px 0 rgba(0,0,0,0.5);
+    }
+    .lock-screen h1 { font-size: 24px; }
+    .lock-screen input {
+      width: 140px; padding: 12px; font-size: 18px; text-align: center;
+      border: 2px solid #ccc; border-radius: 8px; outline: none; margin-right: 8px;
+    }
+    .lock-screen input:focus { border-color: var(--mario-blue); }
+    .lock-screen button {
+      padding: 12px 24px; font-size: 18px; font-weight: bold; border-radius: 8px;
+      border: 3px solid #000; cursor: pointer; font-family: 'Fredoka One', sans-serif;
+      background: var(--mario-blue); color: white; box-shadow: inset -2px -2px 0 rgba(0,0,0,0.2);
+    }
+    .lock-screen button:active { transform: translateY(2px); box-shadow: none; }
+
+    /* 主內容區塊：白底 + 黑框 + 陰影，與主站 details 一致 */
+    .admin-section {
+      background: var(--m-surface);
+      border: 1.5px solid var(--m-muted-border);
+      border-radius: 18px;
+      margin-bottom: 20px;
+      padding: 18px 20px;
+      box-shadow: 0 14px 26px var(--m-muted-shadow);
+      overflow: hidden;
+    }
+    .admin-section h2 {
+      font-size: 20px; font-weight: bold; margin: 0 0 14px 0;
+      font-family: 'Fredoka One', sans-serif; color: var(--text-dark);
+      padding-bottom: 8px; border-bottom: 3px solid #e9ecef;
+    }
+    .admin-section.coins-section h2 { background: linear-gradient(#e8f5e9, #c8e6c9); color: #2e7d32; padding: 12px 16px; margin: -18px -20px 14px -20px; border-bottom: 4px solid #c8e6c9; }
+    .admin-section.tasks-section h2 { background: #e3f2fd; color: #1565c0; padding: 12px 16px; margin: -18px -20px 14px -20px; border-bottom: 4px solid #bbdefb; }
+
+    .toolbar { margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .toolbar button, .coins-row button {
+      min-height: 44px;
+      padding: 10px 16px;
+      border-radius: 14px;
+      border: 1.5px solid rgba(18,18,18,0.16);
+      font-size: 15px;
+      font-weight: 700;
+      font-family: 'Fredoka One', sans-serif;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s;
+      box-shadow: 0 12px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.35);
+    }
+    .toolbar button:active, .coins-row button:active { transform: translateY(2px); box-shadow: 0 7px 14px rgba(0,0,0,0.12), inset 0 2px 10px rgba(0,0,0,0.10); }
+    .toolbar button.primary, .coins-row button.primary { background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18)), var(--m-muted-blue); color: rgba(255,255,255,0.96); }
+    .toolbar button:not(.primary):not(.danger) { background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18)), var(--m-muted-green); color: rgba(255,255,255,0.96); }
+    .coins-row button.danger, .toolbar button.danger { background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18)), var(--m-muted-red); color: rgba(255,255,255,0.96); }
+    .coins-row button:not(.primary):not(.danger) { background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18)), var(--m-muted-yellow); color: rgba(18,18,18,0.78); }
+
+    .player-section { margin-bottom: 20px; }
+    .player-section h2 {
+      font-size: 18px; font-family: 'Fredoka One', sans-serif; color: var(--mario-blue);
+      margin-bottom: 10px; padding-bottom: 6px; border-bottom: 3px solid #bbdefb;
+    }
+    .category-block {
+      background: #fff; border: 3px solid #e9ecef; border-radius: 12px;
+      margin-bottom: 14px; overflow: hidden; box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+    }
+    .category-header {
+      background: #f8f9fa; padding: 12px 14px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 8px; border-bottom: 3px solid #e9ecef;
+    }
+    .category-header input, .category-header select {
+      padding: 8px 10px; border-radius: 8px; border: 2px solid #bbdefb; font-size: 14px; outline: none;
+    }
+    .category-header input:focus, .category-header select:focus { border-color: var(--mario-blue); }
+    .category-body { padding: 12px; background: #fafafa; }
+    .task-row {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin-bottom: 6px;
+      background: #fff; border-radius: 12px; border: 3px solid #e9ecef; flex-wrap: wrap;
+      font-size: 15px;
+    }
+    .task-row input { padding: 6px 10px; border-radius: 8px; border: 2px solid #e0e0e0; outline: none; }
+    .task-row input:focus { border-color: var(--mario-blue); }
+    .task-row input.name { flex: 1; min-width: 180px; }
+    .task-row input.id { width: 82px; }
+    .task-row select { padding: 6px 8px; border-radius: 8px; border: 2px solid #e0e0e0; }
+    .task-row .btn-sm {
+      padding: 6px 12px; font-size: 13px; font-weight: bold; cursor: pointer; border-radius: 8px;
+      border: 1.5px solid rgba(18,18,18,0.16); font-family: 'Fredoka One', sans-serif;
+      background: rgba(255,255,255,0.7); color: rgba(18,18,18,0.72);
+      box-shadow: 0 10px 18px rgba(0,0,0,0.10);
+    }
+    .task-row .btn-sm.del { background: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.18)), var(--m-muted-red); color: rgba(255,255,255,0.96); }
+
+    /* legacy message style (kept for lock-screen error) */
+    .msg { margin-top: 12px; padding: 12px; border-radius: 12px; border: 3px solid transparent; font-weight: 600; }
+    .msg.ok { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+    .msg.err { background: #ffebee; color: #c62828; border-color: #ffcdd2; }
+    .hidden { display: none; }
+
+    .coins-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .coins-row select {
+      padding: 10px 14px; font-size: 16px; border-radius: 8px; border: 2px solid #bbdefb;
+      font-family: 'Fredoka One', sans-serif; outline: none;
+    }
+    .coins-row select:focus { border-color: var(--mario-blue); }
+    .coins-row .current { font-weight: bold; color: var(--mario-blue); font-family: 'Fredoka One', sans-serif; font-size: 20px; text-shadow: 1px 1px 0 #b49100; }
+    .coins-row input[type="number"] { width: 80px; padding: 10px; border-radius: 8px; border: 2px solid #bbdefb; font-size: 16px; }
+    .coins-row input[type="number"]:focus { border-color: var(--mario-blue); outline: none; }
+    .coins-row label { font-weight: 600; color: var(--text-dark); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="fatal-banner" class="fatal-banner"></div>
+    <div id="lock-screen" class="lock-screen">
+      <h1>🔒 任務管理</h1>
+      <p>請輸入管理員密碼</p>
+      <input type="password" id="admin-pwd" placeholder="密碼">
+      <button type="button" onclick="unlock()">解鎖</button>
+      <p id="lock-err" class="msg err hidden"></p>
+    </div>
+    <div id="main-area" class="hidden">
+      <div class="header-row">
+        <h1>📋 管理後台</h1>
+        <div style="display:flex; gap:8px;">
+          <a href="insights.html" class="btn-back">📊 行為洞察</a>
+          <a href="index.html" class="btn-back">← 回瑪利歐金幣</a>
+        </div>
+      </div>
+
+      <div class="admin-section coins-section">
+        <h2>🟡 點數管理</h2>
+        <div class="coins-row">
+          <label>選擇玩家</label>
+          <select id="coins-player" onchange="updateCoinsDisplay()"></select>
+          <span>目前金幣：<span id="coins-display" class="current">--</span></span>
+          <button type="button" class="danger" onclick="resetCoins()">重置為 0</button>
+          <label>手動增減</label>
+          <input type="number" id="coins-adjust" placeholder="例：5 或 -3" title="正數加分、負數扣分">
+          <button type="button" onclick="adjustCoins()">執行</button>
+        </div>
+      </div>
+
+      <div class="admin-section tasks-section">
+        <h2>📋 任務項目編寫與管理</h2>
+        <div class="toolbar">
+          <button type="button" class="primary" onclick="loadFromApi()">從伺服器載入</button>
+          <button type="button" class="primary" onclick="saveToApi()">儲存到伺服器</button>
+          <button type="button" class="danger" onclick="restoreDefaults()">還原預設(Kyle/Ryder)</button>
+          <button type="button" onclick="addCategoryCurrent()">+ 目前頁籤新增分類</button>
+        </div>
+        <div class="tabs-shell">
+          <div id="profile-tabs" class="profile-tabs"></div>
+          <div class="sub-tabs-row">
+            <div id="sub-tabs" class="sub-tabs"></div>
+            <p id="msg" class="tabs-msg hidden"></p>
+          </div>
+          <div class="tabs-content">
+            <div id="tree"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    function resolveApiBase() {
+      try {
+        const override = localStorage.getItem('api_base_override');
+        if (override && override.trim()) return override.trim().replace(/\/+$/, '');
+      } catch (_) {}
+      const host = (location && location.hostname) || '';
+      if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:8001/api';
+      if (host.endsWith('github.io')) return 'https://good-hobbies-api.fly.dev/api';
+      if (location && location.origin && location.origin !== 'null') return `${location.origin}/api`;
+      return 'https://good-hobbies-api.fly.dev/api';
+    }
+
+    const API_BASE = resolveApiBase();
+    const API_TOKEN = "qsqMoZRQnCaEZVcCpahSbE2I-S1uflOLusaexs3k1u0";
+    const ADMIN_PWD = "2738";
+    let tasksData = { kyle: [], ryder: [], common: [] };
+    let statusData = { users: [] };
+    let currentProfile = 'kyle';
+    let currentSubTab = 'routine';
+
+    // 防止 JS 例外導致整頁空白：把錯誤顯示在訊息框
+    window.addEventListener('error', (ev) => {
+      try {
+        showMsg(`前端錯誤：${ev?.message || ev}`, true);
+      } catch (_) {}
+    });
+    window.addEventListener('unhandledrejection', (ev) => {
+      try {
+        const reason = ev?.reason?.message || String(ev?.reason || ev);
+        showMsg(`Promise 錯誤：${reason}`, true);
+      } catch (_) {}
+    });
+
+    function getProfileKeys() {
+      return Object.keys(tasksData).filter(k => k !== 'common' && Array.isArray(tasksData[k]));
+    }
+
+    function ensureTasksDataKeys() {
+      if (!tasksData.kyle) tasksData.kyle = [];
+      if (!tasksData.ryder) tasksData.ryder = [];
+      if (!tasksData.common) tasksData.common = [];
+    }
+
+    function grantAccess() {
+      document.getElementById('lock-screen').classList.add('hidden');
+      document.getElementById('main-area').classList.remove('hidden');
+      refreshCoins();
+      loadFromApi();
+    }
+    function unlock() {
+      const pwd = document.getElementById('admin-pwd').value;
+      const errEl = document.getElementById('lock-err');
+      if (pwd !== ADMIN_PWD) {
+        errEl.textContent = "密碼錯誤";
+        errEl.classList.remove('hidden');
+        return;
+      }
+      errEl.classList.add('hidden');
+      sessionStorage.setItem('gh_authed', '1');   // 本次 session 記住已驗證，洞察頁免再輸入
+      grantAccess();
+    }
+    // 同一 session 已驗證過密碼（例如剛從洞察頁過來）→ 自動解鎖
+    if (sessionStorage.getItem('gh_authed') === '1') grantAccess();
+
+    function fillCoinsDropdown() {
+      const sel = document.getElementById('coins-player');
+      const users = Array.isArray(statusData.users) ? statusData.users : [];
+      const names = users.length ? users.map(u => u.name) : ['kyle', 'ryder'];
+      sel.innerHTML = names.map(n => '<option value="' + escapeAttr(n) + '">' + (n === 'kyle' ? '👦 Kyle' : n === 'ryder' ? '👦 Ryder' : n) + '</option>').join('');
+      updateCoinsDisplay();
+    }
+
+    function updateCoinsDisplay() {
+      const users = Array.isArray(statusData.users) ? statusData.users : [];
+      const player = document.getElementById('coins-player').value;
+      const me = users.find(u => u && u.name === player);
+      const coins = me && Number.isFinite(Number(me.current_coins)) ? me.current_coins : 0;
+      document.getElementById('coins-display').textContent = coins;
+    }
+
+    async function refreshCoins() {
+      try {
+        statusData = await apiFetch(`${API_BASE}/status`);
+        if (!statusData.users) statusData.users = [];
+        fillCoinsDropdown();
+      } catch (e) {
+        document.getElementById('coins-display').textContent = '?';
+      }
+    }
+
+    async function resetCoins() {
+      const player = document.getElementById('coins-player').value;
+      const users = Array.isArray(statusData.users) ? statusData.users : [];
+      const me = users.find(u => u && u.name === player);
+      const current = me && Number.isFinite(Number(me.current_coins)) ? me.current_coins : 0;
+      if (current === 0) {
+        showMsg('該玩家已是 0，不需重置', false);
+        return;
+      }
+      const label = player === 'kyle' ? 'Kyle' : player === 'ryder' ? 'Ryder' : player;
+      if (!confirm(`確定將 ${label} 的點數重置為 0？（目前 ${current}）`)) return;
+      try {
+        await apiFetch(`${API_BASE}/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_name: player, delta: -current, reason: 'admin_reset' })
+        });
+        await refreshCoins();
+        showMsg('已重置為 0', false);
+      } catch (e) {
+        showMsg('重置失敗：' + (e.message || e), true);
+      }
+    }
+
+    async function adjustCoins() {
+      const player = document.getElementById('coins-player').value;
+      const input = document.getElementById('coins-adjust');
+      const val = parseInt(input.value, 10);
+      if (!Number.isFinite(val) || val === 0) {
+        showMsg('請輸入有效的增減數字（正數加分、負數扣分）', true);
+        return;
+      }
+      try {
+        await apiFetch(`${API_BASE}/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_name: player,
+            delta: val,
+            reason: 'admin_adjust'
+          })
+        });
+        await refreshCoins();
+        input.value = '';
+        showMsg('已調整 ' + (val > 0 ? '+' : '') + val + ' 枚金幣', false);
+      } catch (e) {
+        showMsg('調整失敗：' + (e.message || e), true);
+      }
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = { ...(options.headers || {}), 'Authorization': `Bearer ${API_TOKEN}` };
+      const res = await fetch(url, { ...options, headers });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.detail || `HTTP ${res.status}`);
+      return payload;
+    }
+
+    function showMsg(text, isErr) {
+      const banner = document.getElementById('fatal-banner');
+      if (banner) {
+        banner.textContent = text;
+        banner.className = 'fatal-banner ' + (isErr ? 'err' : 'ok');
+      }
+      const el = document.getElementById('msg');
+      if (el) {
+        el.textContent = text;
+        el.className = 'tabs-msg ' + (isErr ? 'err' : 'ok');
+        el.classList.remove('hidden');
+      }
+    }
+
+    async function loadFromApi() {
+      try {
+        tasksData = await apiFetch(`${API_BASE}/tasks`);
+        ensureTasksDataKeys();
+        const keys = getProfileKeys();
+        if (keys.length && !keys.includes(currentProfile)) currentProfile = keys[0];
+        safeRenderAll();
+        showMsg('已從伺服器載入', false);
+      } catch (e) {
+        showMsg('載入失敗：' + (e.message || e), true);
+      }
+    }
+
+    function safeRenderAll() {
+      try {
+        normalizeSelection();
+        renderAll();
+      } catch (e) {
+        // 最低限度：不要讓畫面空白，留著可操作的 UI
+        showMsg('渲染失敗：' + (e?.message || e), true);
+        try {
+          const root = document.getElementById('tree');
+          if (root) root.innerHTML = '';
+        } catch (_) {}
+      }
+    }
+
+    function normalizeSelection() {
+      ensureTasksDataKeys();
+      const keys = getProfileKeys();
+      if (keys.length && !keys.includes(currentProfile)) currentProfile = keys[0];
+      if (currentSubTab === 'common') return;
+      const cats = Array.isArray(tasksData[currentProfile]) ? tasksData[currentProfile] : [];
+      const hasRoutine = cats.some(c => c && c.theme === 'theme-good');
+      const hasBad = cats.some(c => c && c.theme === 'theme-bad');
+      if (currentSubTab === 'routine' && !hasRoutine && hasBad) currentSubTab = 'bad';
+      if (currentSubTab === 'bad' && !hasBad && hasRoutine) currentSubTab = 'routine';
+    }
+
+    function renderAll() {
+      renderProfileTabs();
+      renderSubTabs();
+      renderTree();
+    }
+
+    function renderProfileTabs() {
+      const container = document.getElementById('profile-tabs');
+      if (!container) return;
+      container.innerHTML = '';
+      const keys = getProfileKeys();
+      keys.forEach(pk => {
+        const label = pk === 'kyle' ? '👦 Kyle' : pk === 'ryder' ? '👦 Ryder' : '👤 ' + pk;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'profile-tab' + (pk === currentProfile ? ' active' : '');
+        btn.textContent = label;
+        btn.onclick = () => { currentProfile = pk; safeRenderAll(); };
+        container.appendChild(btn);
+      });
+      const addBtn = document.createElement('button');
+      addBtn.type = 'button';
+      addBtn.className = 'profile-tab add';
+      addBtn.textContent = '+ 新增 Profile';
+      addBtn.onclick = addProfile;
+      container.appendChild(addBtn);
+    }
+
+    function renderSubTabs() {
+      const container = document.getElementById('sub-tabs');
+      if (!container) return;
+      container.innerHTML = '';
+      const tabs = [
+        { id: 'routine', label: '🟢 每日任務' },
+        { id: 'bad', label: '🔴 踩到陷阱' },
+        { id: 'common', label: '🏪 共用' }
+      ];
+      tabs.forEach(t => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'sub-tab' + (t.id === currentSubTab ? ' active' : '');
+        btn.textContent = t.label;
+        btn.onclick = () => { currentSubTab = t.id; safeRenderAll(); };
+        container.appendChild(btn);
+      });
+    }
+
+    function renderTree() {
+      const root = document.getElementById('tree');
+      if (!root) return;
+      root.innerHTML = '';
+      // 只渲染當前 profile（降低 DOM 變動量，避免切換時畫面錯亂）
+      const pk = currentProfile;
+      const categories = Array.isArray(tasksData[pk]) ? tasksData[pk] : [];
+      const routineCats = categories.filter(c => c && c.theme === 'theme-good');
+      const badCats = categories.filter(c => c && c.theme === 'theme-bad');
+
+      const wrap = document.createElement('div');
+      wrap.className = 'profile-content' + (currentSubTab !== 'common' ? ' active' : '');
+      wrap.dataset.profile = pk;
+
+      const panelRoutine = document.createElement('div');
+      panelRoutine.id = 'panel-' + pk + '-routine';
+      panelRoutine.className = 'sub-panel' + (currentSubTab === 'routine' ? ' active' : '');
+      routineCats.forEach((cat) => {
+        const catIndex = categories.indexOf(cat);
+        panelRoutine.appendChild(renderCategory(pk, catIndex, cat));
+      });
+      if (currentSubTab === 'routine' && routineCats.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.padding = '14px';
+        empty.style.color = 'rgba(18,18,18,0.55)';
+        empty.style.fontWeight = '600';
+        empty.textContent = '此 Profile 目前沒有「每日任務」分類。可按「+ 目前頁籤新增分類」建立。';
+        panelRoutine.appendChild(empty);
+      }
+
+      const panelBad = document.createElement('div');
+      panelBad.id = 'panel-' + pk + '-bad';
+      panelBad.className = 'sub-panel' + (currentSubTab === 'bad' ? ' active' : '');
+      badCats.forEach((cat) => {
+        const catIndex = categories.indexOf(cat);
+        panelBad.appendChild(renderCategory(pk, catIndex, cat));
+      });
+      if (currentSubTab === 'bad' && badCats.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.padding = '14px';
+        empty.style.color = 'rgba(18,18,18,0.55)';
+        empty.style.fontWeight = '600';
+        empty.textContent = '此 Profile 目前沒有「踩到陷阱」分類。可按「+ 目前頁籤新增分類」建立。';
+        panelBad.appendChild(empty);
+      }
+
+      wrap.appendChild(panelRoutine);
+      wrap.appendChild(panelBad);
+      root.appendChild(wrap);
+
+      const commonWrap = document.createElement('div');
+      commonWrap.id = 'common-view';
+      commonWrap.className = 'sub-panel' + (currentSubTab === 'common' ? ' active' : '');
+      const commonCats = Array.isArray(tasksData.common) ? tasksData.common : [];
+      commonCats.forEach((cat, catIndex) => {
+        commonWrap.appendChild(renderCategory('common', catIndex, cat));
+      });
+      if (currentSubTab === 'common' && commonCats.length === 0) {
+        const empty = document.createElement('div');
+        empty.style.padding = '14px';
+        empty.style.color = 'rgba(18,18,18,0.55)';
+        empty.style.fontWeight = '600';
+        empty.textContent = '目前沒有共用項目。可按「+ 目前頁籤新增分類」建立。';
+        commonWrap.appendChild(empty);
+      }
+      root.appendChild(commonWrap);
+    }
+
+    function addProfile() {
+      const name = prompt('請輸入新 Profile 名稱（英文，例如新成員代號）');
+      if (!name || !name.trim()) return;
+      const key = name.trim().toLowerCase().replace(/\s+/g, '_');
+      if (key === 'common' || getProfileKeys().includes(key)) {
+        showMsg('此名稱已存在或不可使用', true);
+        return;
+      }
+      tasksData[key] = [
+        { id: key + '_routine', title: '🟢 每日任務', theme: 'theme-good', isActive: true, defaultOpen: true, tasks: [] },
+        { id: key + '_bad', title: '🔴 踩到陷阱', theme: 'theme-bad', isActive: true, defaultOpen: false, tasks: [] }
+      ];
+      currentProfile = key;
+      safeRenderAll();
+      showMsg('已新增 Profile：「' + key + '」，請儲存到伺服器', false);
+    }
+
+    function addCategoryCurrent() {
+      if (currentSubTab === 'common') {
+        tasksData.common = tasksData.common || [];
+        tasksData.common.push({
+          id: 'common_new',
+          title: '🏪 兌換項目',
+          theme: 'theme-shop',
+          isActive: true,
+          defaultOpen: false,
+          tasks: []
+        });
+      } else {
+        const theme = currentSubTab === 'routine' ? 'theme-good' : 'theme-bad';
+        const title = currentSubTab === 'routine' ? '🟢 每日任務' : '🔴 踩到陷阱';
+        tasksData[currentProfile] = tasksData[currentProfile] || [];
+        tasksData[currentProfile].push({
+          id: currentProfile + '_' + (theme === 'theme-good' ? 'routine' : 'bad'),
+          title: title,
+          theme: theme,
+          isActive: true,
+          defaultOpen: theme === 'theme-good',
+          tasks: []
+        });
+      }
+      safeRenderAll();
+      showMsg('已新增分類', false);
+    }
+
+    function renderCategory(playerKey, catIndex, cat) {
+      const div = document.createElement('div');
+      div.className = 'category-block';
+      const id = (cat && cat.id) || '';
+      const title = (cat && cat.title) || '';
+      const theme = (cat && cat.theme) || 'theme-good';
+      const isActive = cat && cat.isActive !== false;
+      const defaultOpen = cat && cat.defaultOpen === true;
+      const tasks = Array.isArray(cat && cat.tasks) ? cat.tasks : [];
+
+      div.innerHTML = `
+        <div class="category-header">
+          <span>
+            <input type="text" class="cat-id" placeholder="id" value="${escapeAttr(id)}" title="分類 id">
+            <input type="text" class="cat-title" placeholder="標題" value="${escapeAttr(title)}" style="min-width:160px">
+            <select class="cat-theme">
+              <option value="theme-good" ${theme === 'theme-good' ? 'selected' : ''}>🟢 綠</option>
+              <option value="theme-bad" ${theme === 'theme-bad' ? 'selected' : ''}>🔴 紅</option>
+              <option value="theme-shop" ${theme === 'theme-shop' ? 'selected' : ''}>🏪 藍</option>
+              <option value="theme-history" ${theme === 'theme-history' ? 'selected' : ''}>📜 紫</option>
+            </select>
+            <label><input type="checkbox" class="cat-active" ${isActive ? 'checked' : ''}> 啟用</label>
+            <label><input type="checkbox" class="cat-open" ${defaultOpen ? 'checked' : ''}> 預設展開</label>
+          </span>
+          <span>
+            <button type="button" class="btn-sm" onclick="addTask('${playerKey}', ${catIndex})">+ 項目</button>
+            <button type="button" class="btn-sm danger" onclick="delCategory('${playerKey}', ${catIndex})">刪除分類</button>
+          </span>
+        </div>
+        <div class="category-body" data-player="${playerKey}" data-catindex="${catIndex}"></div>
+      `;
+      const body = div.querySelector('.category-body');
+      tasks.forEach((task, taskIndex) => {
+        body.appendChild(renderTaskRow(playerKey, catIndex, taskIndex, task));
+      });
+      return div;
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderTaskRow(playerKey, catIndex, taskIndex, task) {
+      const row = document.createElement('div');
+      row.className = 'task-row';
+      const t = task || {};
+      const type = t.type || 'earn';
+      row.innerHTML = `
+        <input type="text" class="id" placeholder="id" value="${escapeAttr(t.id || '')}" title="任務 id">
+        <input type="text" class="name" placeholder="項目名稱" value="${escapeAttr(t.name || '')}">
+        <select class="type">
+          <option value="earn" ${type === 'earn' ? 'selected' : ''}>加分</option>
+          <option value="lose" ${type === 'lose' ? 'selected' : ''}>扣分</option>
+          <option value="shop" ${type === 'shop' ? 'selected' : ''}>兌換</option>
+        </select>
+        <input type="number" class="points" placeholder="點數" value="${t.points != null ? t.points : ''}" title="加分/扣分用">
+        <input type="number" class="cost-stars" placeholder="星數" value="${t.costStars != null ? t.costStars : ''}" title="兌換用">
+        <input type="text" class="btn-class" placeholder="btnClass" value="${escapeAttr(t.btnClass || 'btn-question')}" style="width:100px">
+        <input type="text" class="btn-text" placeholder="按鈕" value="${escapeAttr(t.btnText || '?')}" style="width:60px">
+        <button type="button" class="btn-sm del" onclick="delTask('${playerKey}', ${catIndex}, ${taskIndex})">刪</button>
+      `;
+      return row;
+    }
+
+    function applyDomEditsToTasksData() {
+      // 注意：畫面上只渲染「當前 profile / 當前子頁籤」與 common。
+      // 所以這裡只把 DOM 看到的部分回寫進 tasksData，避免把其他 profile 清空。
+      const byKey = {};
+      document.querySelectorAll('.category-block').forEach(block => {
+        const header = block.querySelector('.category-header');
+        const body = block.querySelector('.category-body');
+        if (!header || !body) return;
+        const playerKey = body.dataset.player;
+        const catIndex = parseInt(body.dataset.catindex, 10);
+        if (!playerKey || !Number.isFinite(catIndex)) return;
+        if (!byKey[playerKey]) byKey[playerKey] = {};
+
+        const cat = {
+          id: header.querySelector('.cat-id').value.trim() || 'cat_' + catIndex,
+          title: header.querySelector('.cat-title').value.trim() || '未命名',
+          theme: header.querySelector('.cat-theme').value,
+          isActive: header.querySelector('.cat-active').checked,
+          defaultOpen: header.querySelector('.cat-open').checked,
+          tasks: []
+        };
+        body.querySelectorAll('.task-row').forEach(r => {
+          const type = r.querySelector('.type').value;
+          const task = {
+            id: r.querySelector('.id').value.trim() || 't',
+            name: r.querySelector('.name').value.trim() || '未命名',
+            type: type,
+            btnClass: r.querySelector('.btn-class').value.trim() || 'btn-question',
+            btnText: r.querySelector('.btn-text').value.trim() || '?'
+          };
+          const pts = r.querySelector('.points').value;
+          const stars = r.querySelector('.cost-stars').value;
+          if (type !== 'shop' && pts !== '') task.points = parseInt(pts, 10);
+          if (type === 'shop' && stars !== '') task.costStars = parseInt(stars, 10);
+          cat.tasks.push(task);
+        });
+        byKey[playerKey][catIndex] = cat;
+      });
+
+      for (const playerKey of Object.keys(byKey)) {
+        tasksData[playerKey] = Array.isArray(tasksData[playerKey]) ? tasksData[playerKey] : [];
+        for (const idxStr of Object.keys(byKey[playerKey])) {
+          const idx = Number(idxStr);
+          tasksData[playerKey][idx] = byKey[playerKey][idx];
+        }
+        // 清掉 undefined hole（保持順序）
+        tasksData[playerKey] = tasksData[playerKey].filter(Boolean);
+      }
+
+      ensureTasksDataKeys();
+    }
+
+    function delCategory(playerKey, catIndex) {
+      if (!confirm('確定刪除此分類？')) return;
+      applyDomEditsToTasksData();
+      tasksData[playerKey].splice(catIndex, 1);
+      safeRenderAll();
+      showMsg('已刪除分類', false);
+    }
+
+    function addTask(playerKey, catIndex) {
+      // 先把目前輸入中的內容寫回 tasksData，避免新增項目時清空未儲存欄位
+      applyDomEditsToTasksData();
+      const cat = tasksData[playerKey][catIndex];
+      if (!cat.tasks) cat.tasks = [];
+      cat.tasks.push({
+        id: 'new_task',
+        name: '新項目',
+        type: 'earn',
+        points: 1,
+        btnClass: 'btn-question',
+        btnText: '?'
+      });
+      safeRenderAll();
+      showMsg('已新增項目', false);
+    }
+
+    function delTask(playerKey, catIndex, taskIndex) {
+      if (!confirm('確定刪除此項目？')) return;
+      applyDomEditsToTasksData();
+      tasksData[playerKey][catIndex].tasks.splice(taskIndex, 1);
+      safeRenderAll();
+      showMsg('已刪除項目', false);
+    }
+
+    async function saveToApi() {
+      applyDomEditsToTasksData();
+      const data = tasksData; // 必須送「整包」，避免覆寫時把其他 profile 清空
+      try {
+        const res = await fetch(`${API_BASE}/admin/tasks`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_TOKEN}` },
+          body: JSON.stringify(data)
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload.detail || res.status);
+        showMsg('已儲存到伺服器（保留所有 Profile），主畫面重新整理後即生效', false);
+        // 以後端為準重新載入，避免前端狀態與 DB 不一致
+        await loadFromApi();
+      } catch (e) {
+        showMsg('儲存失敗：' + (e.message || e), true);
+      }
+    }
+
+    async function restoreDefaults() {
+      if (!confirm('確定要用預設 tasks.json 還原？\n注意：這會覆寫目前 DB 內的所有 Profile 設定。')) return;
+      try {
+        await apiFetch(`${API_BASE}/admin/tasks/restore-defaults`, { method: 'POST' });
+        await loadFromApi();
+        showMsg('已還原預設任務（Kyle/Ryder/共用）', false);
+      } catch (e) {
+        showMsg('還原失敗：' + (e.message || e), true);
+      }
+    }
+  </script>
+</body>
+</html>

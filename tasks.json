@@ -1,0 +1,95 @@
+{
+  "kyle": [
+    {
+      "id": "kyle_routine",
+      "title": "🟢 每日任務",
+      "theme": "theme-good",
+      "isActive": true,
+      "defaultOpen": true,
+      "tasks": [
+        { "id": "k_g1", "name": "🪥 早晚在浴室刷牙（含用牙線）洗臉", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g2", "name": "⏰ 鬧鐘響自己起床不賴床", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g3", "name": "❌📺 平日一～五不看電視(假期除外)", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g4", "name": "🥣 7:10PM前吃完晚餐（週二除外）", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g5", "name": "🎒 9PM前洗完澡髒衣服拿去陽台", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g6", "name": "📚 主動完成中英文功課", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g7", "name": "😴 9:15PM前上床睡覺", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g8", "name": "💊 早晚吸噴藥", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g9", "name": "🎒 主動拿髒便當盒/水壺/髒衣服出來清洗", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g10", "name": "📚 主動找爸媽簽英文功課/聯絡簿", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "k_g11", "name": "🎒 收拾次日書包", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" }
+      ]
+    },
+    {
+      "id": "kyle_bad",
+      "title": "🔴 踩到陷阱",
+      "theme": "theme-bad",
+      "isActive": true,
+      "defaultOpen": false,
+      "tasks": [
+        { "id": "k_b1", "name": "😤 肢體攻擊： 無論原因為何（即便覺得弟弟欠揍），動手推、打、踢即扣分", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b2", "name": "😤 言語羞辱： 使用人身攻擊字眼（例如：笨蛋、廢物）", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b3", "name": "⚔️ 惡意破壞： 故意毀損弟弟的玩具或作品以示報復", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b4", "name": "🤬 說/做不雅文字/行為", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b5", "name": "💢 故意過度吼叫： 面對問題時，不使用語言溝通而直接用尖叫或大吼", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b6", "name": "⚔️ 故意忽視約定： 明確講好（如計時器響）卻賴皮不執行原訂任務", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b7", "name": "💢 故意拒絕冷靜： 當大人介入要求先分開冷靜時，仍持續追著對方叫罵。", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "k_b8", "name": "⚔️ 私刑正義： 發現弟弟犯錯時，未告知大人而直接搶奪、處罰弟弟。", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" }
+
+      ]
+    }
+  ],
+  "ryder": [
+    {
+      "id": "ryder_routine",
+      "title": "🟢 挑戰關卡",
+      "theme": "theme-good",
+      "isActive": true,
+      "defaultOpen": true,
+      "tasks": [
+        { "id": "r_g1", "name": "🪥 早晚在浴室刷牙（含用牙線）洗臉", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g2", "name": "⏰ 鬧鐘響自己起床不賴床", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g3", "name": "📺 6:30PM前看完電視", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g4", "name": "🚗 趕上早上娃娃車", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g5", "name": "🎒 主動收拾書包（髒便當盒/髒衣服/髒毛巾/聯絡簿）", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g6", "name": "🧸 睡前收拾所有玩具/書籍", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g7", "name": "😴 9:15PM前睡覺", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g8", "name": "🥬 吃青菜至少一口", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g9", "name": "🚽 練習自己擦屁股", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g10", "name": "🚽 練習尿在馬桶內", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" },
+        { "id": "r_g11", "name": "🚿 練習自己洗澡不浪費水不噴濺髒衣服拿到陽台", "points": 1, "type": "earn", "btnClass": "btn-question", "btnText": "❓" }
+
+      ]
+    },
+    {
+      "id": "ryder_bad",
+      "title": "🔴 踩到陷阱",
+      "theme": "theme-bad",
+      "isActive": true,
+      "defaultOpen": false,
+      "tasks": [
+        { "id": "r_b1", "name": "😭 情緒失控大聲尖叫", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "r_b2", "name": "🌪️ 亂丟東西 / 破壞玩具", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "r_b3", "name": "⚔️ 動手打人 / 搶玩具", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "r_b4", "name": "⚔️ 說/做不雅文字/行為", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "r_b5", "name": "⚔️ 沒有問就用搶的", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" },
+        { "id": "r_b6", "name": "⚔️ 惡意破壞： 故意毀損哥哥的玩具或作品以示報復", "points": -1, "type": "lose", "btnClass": "btn-goomba", "btnText": "-1 🌰" }
+
+      ]
+    }
+  ],
+  "common": [
+    {
+      "id": "shared_shop",
+      "title": "🏪 兄弟共用兌換所",
+      "theme": "theme-shop",
+      "isActive": true,
+      "defaultOpen": false,
+      "tasks": [
+        { "id": "c_s1", "name": "🎴 寶可夢卡牌對決", "costStars": 1, "type": "shop", "btnClass": "btn-shop shop-btn", "btnText": "🌟x1" },
+        { "id": "c_s2", "name": "👀 高島屋看玩具 30m", "costStars": 1, "type": "shop", "btnClass": "btn-shop shop-btn", "btnText": "🌟x1" },
+        { "id": "c_s3", "name": "🍿 週末電影挑選權", "costStars": 2, "type": "shop", "btnClass": "btn-shop shop-btn", "btnText": "🌟x2" }
+      ]
+    }
+  ]
+}
