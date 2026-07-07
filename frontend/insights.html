@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>行為洞察 - 瑪利歐金幣系統</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --mario-red:#e52521; --mario-yellow:#fbd000; --mario-blue:#049cd8; --mario-green:#43b047;
+      --bg:#1f2a44; --card:#ffffff; --text-dark:#2b2b3a; --muted:#7a8194;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0; padding:0; background:linear-gradient(160deg,#1f2a44,#2c1c3a);
+      color:var(--text-dark); font-family:'Microsoft JhengHei','Segoe UI',sans-serif; min-height:100vh;
+    }
+    .container{max-width:760px; margin:0 auto; padding:16px;}
+    h1{font-family:'Fredoka One',sans-serif; color:#fff; font-size:24px; margin:0;}
+    .header-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;}
+    .btn-back{background:rgba(255,255,255,.15); color:#fff; text-decoration:none; padding:8px 14px; border-radius:10px; font-size:14px; border:1px solid rgba(255,255,255,.25);}
+    .btn-back:hover{background:rgba(255,255,255,.28);}
+    /* lock */
+    .lock-screen{max-width:340px; margin:14vh auto; background:#fff; border-radius:18px; padding:28px 24px; text-align:center; box-shadow:0 12px 30px rgba(0,0,0,.3);}
+    .lock-screen h1{color:var(--text-dark);}
+    .lock-screen p{color:var(--muted); margin:8px 0 16px;}
+    .lock-screen input{width:100%; padding:12px; font-size:16px; border:2px solid #ddd; border-radius:10px; text-align:center; margin-bottom:12px;}
+    .lock-screen button{width:100%; padding:12px; font-size:16px; font-weight:700; color:#fff; background:var(--mario-blue); border:none; border-radius:10px; cursor:pointer;}
+    .hidden{display:none !important;}
+    .err{color:var(--mario-red); font-size:14px; margin-top:6px;}
+    /* window selector */
+    .win-row{display:flex; gap:8px; margin-bottom:16px;}
+    .win-btn{flex:1; padding:9px; border-radius:10px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.1); color:#fff; font-weight:600; cursor:pointer; font-size:14px;}
+    .win-btn.active{background:var(--mario-yellow); color:#5a4b00; border-color:var(--mario-yellow);}
+    /* cards */
+    .card{background:var(--card); border-radius:16px; padding:16px 16px 8px; margin-bottom:16px; box-shadow:0 6px 16px rgba(0,0,0,.18);}
+    .card-title{font-family:'Fredoka One',sans-serif; font-size:18px; margin:0 0 4px; display:flex; align-items:center; gap:8px;}
+    .card-sub{color:var(--muted); font-size:12px; margin:0 0 12px;}
+    .attn{border:2px solid var(--mario-red);}
+    .attn .card-title{color:var(--mario-red);}
+    .group-label{font-weight:700; font-size:14px; color:var(--text-dark); margin:14px 0 8px; padding-bottom:4px; border-bottom:2px dashed #eee;}
+    .rule{display:flex; align-items:center; gap:10px; padding:9px 6px; border-bottom:1px solid #f2f2f5;}
+    .rule:last-child{border-bottom:none;}
+    .dot{font-size:16px; flex-shrink:0; width:20px; text-align:center;}
+    .rule-main{flex:1; min-width:0;}
+    .rule-name{font-size:14px; color:var(--text-dark); line-height:1.3;}
+    .rule-meta{font-size:11.5px; color:var(--muted); margin-top:2px;}
+    .badge{font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px; white-space:nowrap; flex-shrink:0;}
+    .b-red{background:#fde2e1; color:#b5201c;}
+    .b-yellow{background:#fff3cf; color:#9a7400;}
+    .b-green{background:#dff3e0; color:#2e7d32;}
+    /* 圖表：彙整比例條 + 每條規則長條 */
+    .chips{display:flex; gap:12px; font-size:12.5px; font-weight:700; margin:2px 0 5px;}
+    .chip-r{color:#b5201c;} .chip-y{color:#9a7400;} .chip-g{color:#2e7d32;}
+    .sumbar{display:flex; height:14px; border-radius:7px; overflow:hidden; margin:0 0 6px; background:#eef0f3;}
+    .sumbar>span{display:block; height:100%;}
+    .sum-red{background:#e5534b;} .sum-yellow{background:#f2c14e;} .sum-green{background:#5bbf63;}
+    .crow{padding:8px 4px; border-bottom:1px solid #f2f2f5;}
+    .crow:last-child{border-bottom:none;}
+    .crow-top{display:flex; align-items:center; gap:7px; font-size:13.5px; color:var(--text-dark);}
+    .crow-top .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+    .crow-val{font-size:12px; font-weight:700; color:var(--muted); white-space:nowrap;}
+    .track{height:12px; border-radius:6px; background:#eef0f3; margin-top:5px; overflow:hidden;}
+    .track.never{background:repeating-linear-gradient(45deg,#fde2e1,#fde2e1 5px,#fff 5px,#fff 10px);}
+    .fill{height:100%; border-radius:6px; min-width:4px;}
+    .f-red{background:#e5534b;} .f-yellow{background:#f2c14e;} .f-green{background:#5bbf63;}
+    .crow-meta{font-size:11px; color:var(--muted); margin-top:3px;}
+    /* 折線圖 */
+    .chart-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch; margin:6px 0 2px; background:#fafbfc; border-radius:10px; padding:4px 2px;}
+    .linechart{display:block;}
+    .linechart .grid{stroke:#eceef2; stroke-width:1;}
+    .linechart .xlab{fill:#99a; font-size:11px;}
+    .linechart .ylab{fill:#aab; font-size:10px;}
+    .scroll-hint{font-size:10.5px; color:var(--muted); text-align:right; margin:0 4px 6px;}
+    .leg{display:flex; align-items:center; gap:7px; font-size:12.5px; padding:5px 2px; border-bottom:1px solid #f4f4f7;}
+    .leg:last-child{border-bottom:none;}
+    .leg .idx{font-weight:700; color:#aab; min-width:16px; text-align:right;}
+    .leg .lname{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-dark);}
+    .leg .lcnt{font-weight:700; white-space:nowrap; font-size:12px;}
+    .lc-red{color:#b5201c;} .lc-yellow{color:#9a7400;} .lc-green{color:#2e7d32;}
+    .catsec{margin-bottom:10px; padding-top:4px; border-top:1px solid #f0f1f4;}
+    .catsec:first-of-type{border-top:none;}
+    .cat-title{font-weight:700; font-size:14.5px; color:var(--text-dark); margin:8px 0 2px; display:flex; align-items:center; gap:8px;}
+    .cat-count{font-size:11px; font-weight:600; color:var(--muted);}
+    .more-link{display:inline-block; margin:8px 2px 2px; font-size:12.5px; color:var(--mario-blue); font-weight:700; cursor:pointer;}
+    .more-link:hover{text-decoration:underline;}
+    .empty{color:var(--muted); font-size:13px; padding:8px 6px;}
+    .attn-item{font-size:13.5px; padding:7px 6px; border-bottom:1px solid #f7e7e7; line-height:1.4;}
+    .attn-item:last-child{border-bottom:none;}
+    .attn-item b{color:var(--mario-red);}
+    .footnote{color:rgba(255,255,255,.7); font-size:12px; line-height:1.6; text-align:center; margin:8px 4px 24px;}
+    .stamp{color:rgba(255,255,255,.55); font-size:11px; text-align:center; margin-bottom:8px;}
+    .fatal{background:var(--mario-red); color:#fff; padding:10px 14px; border-radius:10px; margin-bottom:14px; font-size:13px; display:none;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 密碼閘（與管理後台同一組密碼）-->
+    <div id="lock-screen" class="lock-screen">
+      <h1>🔒 行為洞察</h1>
+      <p>請輸入管理員密碼</p>
+      <input type="password" id="ins-pwd" placeholder="密碼" onkeydown="if(event.key==='Enter')unlock()">
+      <button type="button" onclick="unlock()">解鎖</button>
+      <p id="lock-err" class="err hidden"></p>
+    </div>
+
+    <div id="main-area" class="hidden">
+      <div class="header-row">
+        <h1>📊 行為洞察</h1>
+        <div>
+          <a href="admin-tasks.html" class="btn-back">← 管理後台</a>
+          <a href="index.html" class="btn-back">🪙 金幣</a>
+        </div>
+      </div>
+
+      <div id="fatal" class="fatal"></div>
+
+      <div class="win-row">
+        <button class="win-btn" data-win="7"  onclick="setWindow(7)">近 7 天</button>
+        <button class="win-btn active" data-win="30" onclick="setWindow(30)">近 30 天</button>
+        <button class="win-btn" data-win="0"  onclick="setWindow(0)">全部</button>
+      </div>
+
+      <p id="stamp" class="stamp"></p>
+      <div id="report"></div>
+
+      <p class="footnote">🔴 紅燈的<b style="color:#fbd000">獎勵規則</b>＝孩子幾乎不做的習慣。下一階段可在這裡一鍵請 AI 把它拆解成小步驟、換更吸引孩子的說法。</p>
+    </div>
+  </div>
+
+  <script>
+    function resolveApiBase() {
+      try {
+        const override = localStorage.getItem('api_base_override');
+        if (override && override.trim()) return override.trim().replace(/\/+$/, '');
+      } catch (_) {}
+      const host = (location && location.hostname) || '';
+      if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:8001/api';
+      if (host.endsWith('github.io')) return 'https://good-hobbies-api.fly.dev/api';
+      if (location && location.origin && location.origin !== 'null') return `${location.origin}/api`;
+      return 'https://good-hobbies-api.fly.dev/api';
+    }
+    const API_BASE = resolveApiBase();
+    const API_TOKEN = "qsqMoZRQnCaEZVcCpahSbE2I-S1uflOLusaexs3k1u0";
+    const ADMIN_PWD = "2738";
+    const PROFILE_LABEL = { kyle: '🍄 Kyle', ryder: '🦖 Ryder' };
+
+    let WINDOW_DAYS = 30;
+    let RAW = null;   // { profiles:[key], tasksByProfile:{key:[task]}, txByProfile:{key:[tx]} }
+
+    function showFatal(msg){ const el=document.getElementById('fatal'); el.textContent='⚠️ '+msg; el.style.display='block'; }
+
+    async function apiFetch(url){
+      const res = await fetch(url, { headers: { 'Authorization': `Bearer ${API_TOKEN}` } });
+      if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+      return res.json();
+    }
+
+    function grantAccess(){
+      document.getElementById('lock-screen').classList.add('hidden');
+      document.getElementById('main-area').classList.remove('hidden');
+      loadData();
+    }
+    function unlock(){
+      const pwd = document.getElementById('ins-pwd').value;
+      const err = document.getElementById('lock-err');
+      if(pwd !== ADMIN_PWD){ err.textContent='密碼錯誤'; err.classList.remove('hidden'); return; }
+      err.classList.add('hidden');
+      sessionStorage.setItem('gh_authed', '1');   // 與管理後台共用：驗一次即可
+      grantAccess();
+    }
+    // 同一 session 已在管理後台驗證過 → 自動解鎖，免再輸入密碼
+    if (sessionStorage.getItem('gh_authed') === '1') grantAccess();
+
+    // 把分類陣列攤平成任務清單（只取 earn / lose，shop 不列入行為分析）
+    // 保留分類結構（露營／日常／假日…各自一組），每組只取 earn/lose 任務
+    function extractCategories(categories){
+      return (categories || []).map(cat => ({
+        title: (cat.title || '其他').trim(),
+        tasks: (cat.tasks || [])
+          .filter(t => t.type === 'earn' || t.type === 'lose')
+          .map(t => ({ id: t.id, name: (t.name||'').trim(), type: t.type }))
+      })).filter(c => c.tasks.length > 0);
+    }
+
+    async function loadData(){
+      try{
+        document.getElementById('report').innerHTML = '<p class="empty" style="color:#fff">載入中…</p>';
+        const tasksCfg = await apiFetch(`${API_BASE}/tasks`);
+        const profiles = Object.keys(tasksCfg).filter(k => k !== 'common' && Array.isArray(tasksCfg[k]));
+        const commonCats = extractCategories(tasksCfg['common']);
+        const catsByProfile = {}, txByProfile = {};
+        for (const p of profiles){
+          // 每位孩子的分類 = 個人分類 + 共用分類
+          catsByProfile[p] = [...extractCategories(tasksCfg[p]), ...commonCats];
+          txByProfile[p] = await apiFetch(`${API_BASE}/transactions/${encodeURIComponent(p)}?limit=5000`).catch(()=>[]);
+        }
+        RAW = { profiles, catsByProfile, txByProfile };
+        render();
+      }catch(e){
+        showFatal(`載入失敗：${e.message||e}`);
+        document.getElementById('report').innerHTML = '';
+      }
+    }
+
+    function parseTs(s){
+      // 後端回傳格式："YYYY/MM/DD HH:MM"（已轉 +08）
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    function daysAgo(d){
+      const ms = Date.now() - d.getTime();
+      return Math.floor(ms / 86400000);
+    }
+
+    // 聚合單一任務：在視窗內出現幾次、最後一次何時
+    function aggregate(task, txs){
+      const now = Date.now();
+      const winMs = WINDOW_DAYS > 0 ? WINDOW_DAYS * 86400000 : Infinity;
+      let countWin = 0, lastDate = null;
+      txs.forEach(tx => {
+        if (tx.action_type !== task.type) return;
+        if ((tx.task_name||'').trim() !== task.name) return;
+        const d = parseTs(tx.timestamp);
+        if (!d) return;
+        if (!lastDate || d > lastDate) lastDate = d;
+        if (now - d.getTime() <= winMs) countWin++;
+      });
+      return { countWin, lastDate };
+    }
+
+    // 獎勵規則(earn)：做越多越好 → 看「多久沒做」
+    function earnLight(agg){
+      if (agg.countWin === 0 && !agg.lastDate) return { cls:'b-red', dot:'🔴', text:'從未執行' };
+      const since = agg.lastDate ? daysAgo(agg.lastDate) : 999;
+      if (agg.countWin === 0) return { cls:'b-red', dot:'🔴', text:`已 ${since} 天沒做` };
+      if (since > 14) return { cls:'b-red', dot:'🔴', text:`已 ${since} 天沒做` };
+      if (since > 4)  return { cls:'b-yellow', dot:'🟡', text:`偶爾做` };
+      return { cls:'b-green', dot:'🟢', text:'穩定' };
+    }
+    // 禁止事項(lose)：發生＝扣分＝壞事 → 沒發生最好
+    function loseLight(agg){
+      if (agg.countWin === 0) return { cls:'b-green', dot:'🟢', text:'沒發生 👍' };
+      if (agg.countWin <= 2)  return { cls:'b-yellow', dot:'🟡', text:`偶爾發生` };
+      return { cls:'b-red', dot:'🔴', text:'經常發生' };
+    }
+
+    function metaLine(agg, isEarn){
+      const winLabel = WINDOW_DAYS > 0 ? `近${WINDOW_DAYS}天` : '全部';
+      const verb = isEarn ? '執行' : '發生';
+      const last = agg.lastDate
+        ? `最後${verb}：${daysAgo(agg.lastDate)===0?'今天':daysAgo(agg.lastDate)+' 天前'}`
+        : `從未${verb}`;
+      return `${winLabel} ${verb} ${agg.countWin} 次 · ${last}`;
+    }
+
+    function lightOf(task, agg){ return task.type === 'earn' ? earnLight(agg) : loseLight(agg); }
+    function fillClass(cls){ return cls === 'b-red' ? 'f-red' : cls === 'b-yellow' ? 'f-yellow' : 'f-green'; }
+
+    function ruleRow(task, agg, isEarn, maxCount){
+      const light = isEarn ? earnLight(agg) : loseLight(agg);
+      const c = agg.countWin;
+      const never = c === 0;
+      const pct = maxCount > 0 && c > 0 ? Math.max(8, Math.round(c / maxCount * 100)) : 0;
+      const trackCls = (isEarn && never) ? 'track never' : 'track';
+      const fill = never ? '' : `<div class="fill ${fillClass(light.cls)}" style="width:${pct}%"></div>`;
+      const winLabel = WINDOW_DAYS > 0 ? `近${WINDOW_DAYS}天` : '全部';
+      const verb = isEarn ? '執行' : '發生';
+      const lastTxt = agg.lastDate
+        ? `最後${verb}：${daysAgo(agg.lastDate) === 0 ? '今天' : daysAgo(agg.lastDate) + ' 天前'}`
+        : `從未${verb}`;
+      return `<div class="crow">
+        <div class="crow-top">
+          <span>${light.dot}</span>
+          <span class="nm" title="${escapeHtml(task.name)}">${escapeHtml(task.name)}</span>
+          <span class="crow-val">${c} 次</span>
+        </div>
+        <div class="${trackCls}">${fill}</div>
+        <div class="crow-meta">${winLabel} · ${lastTxt} · ${light.text}</div>
+      </div>`;
+    }
+
+    function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    function fillHex(cls){ return cls === 'b-red' ? '#e5534b' : cls === 'b-yellow' ? '#f2c14e' : '#5bbf63'; }
+
+    // 折線圖：X=規則(依次數由低到高)、Y=次數；點的顏色＝燈號
+    function lineChartSVG(rows){
+      const n = rows.length;
+      if (n === 0) return '';
+      const counts = rows.map(r => r.agg.countWin);
+      const maxC = Math.max(1, ...counts);
+      const stepX = 46, padL = 26, padR = 16, padT = 14, padB = 24;
+      const plotW = n > 1 ? (n - 1) * stepX : 0;
+      const W = padL + plotW + padR, H = 150, plotH = H - padT - padB;
+      const X = i => padL + (n > 1 ? i * stepX : plotW / 2);
+      const Y = v => padT + plotH - (v / maxC) * plotH;
+      const yvals = [...new Set([0, Math.round(maxC / 2), maxC])];
+      const grid = yvals.map(v =>
+        `<line class="grid" x1="${padL}" y1="${Y(v)}" x2="${W - padR}" y2="${Y(v)}"/>` +
+        `<text class="ylab" x="${padL - 5}" y="${Y(v) + 3}" text-anchor="end">${v}</text>`).join('');
+      const poly = counts.map((c, i) => `${X(i)},${Y(c)}`).join(' ');
+      const dots = rows.map((r, i) => {
+        const col = fillHex(lightOf(r.t, r.agg).cls);
+        return `<circle cx="${X(i)}" cy="${Y(counts[i])}" r="5" fill="${col}" stroke="#fff" stroke-width="1.5"/>` +
+               `<text class="xlab" x="${X(i)}" y="${H - 7}" text-anchor="middle">${i + 1}</text>`;
+      }).join('');
+      return `<svg class="linechart" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+        ${grid}
+        <polyline points="${poly}" fill="none" stroke="#b9bfca" stroke-width="2.5" stroke-linejoin="round"/>
+        ${dots}
+      </svg>`;
+    }
+
+    // 編號圖例：對應折線圖每個 X 點
+    function legendList(rows){
+      return rows.map((r, i) => {
+        const isEarn = r.t.type === 'earn';
+        const verb = isEarn ? '執行' : '發生';
+        const l = lightOf(r.t, r.agg);
+        const lc = l.cls === 'b-red' ? 'lc-red' : l.cls === 'b-yellow' ? 'lc-yellow' : 'lc-green';
+        const last = r.agg.lastDate
+          ? (daysAgo(r.agg.lastDate) === 0 ? '今天' : daysAgo(r.agg.lastDate) + '天前')
+          : `從未${verb}`;
+        return `<div class="leg">
+          <span class="idx">${i + 1}</span><span>${l.dot}</span>
+          <span class="lname" title="${escapeHtml(r.t.name)}">${escapeHtml(r.t.name)}</span>
+          <span class="lcnt ${lc}">${r.agg.countWin}次 · ${last}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // 一個分類 = 一張折線圖；先顯示次數最低的前 5 條，其餘用「顯示全部」展開
+    function catBlock(p, ci, cat, rows){
+      const total = rows.length;
+      const id = `cat-${p}-${ci}`;
+      const make = rs => `<div class="chart-wrap">${lineChartSVG(rs)}</div>${legendList(rs)}`;
+      const head = `<div class="cat-title">${escapeHtml(cat.title)} <span class="cat-count">${total} 條</span></div>`;
+      if (total <= 5) return `<div class="catsec">${head}${make(rows)}</div>`;
+      const top = rows.slice(0, 5);
+      return `<div class="catsec">${head}
+        <div id="${id}-c">${make(top)}<a class="more-link" onclick="expandCat('${id}')">顯示全部 ${total} 條 ▾</a></div>
+        <div id="${id}-f" class="hidden">${make(rows)}<a class="more-link" onclick="collapseCat('${id}')">收合 ▲</a></div>
+      </div>`;
+    }
+    function expandCat(id){ document.getElementById(id+'-c').classList.add('hidden'); document.getElementById(id+'-f').classList.remove('hidden'); }
+    function collapseCat(id){ document.getElementById(id+'-f').classList.add('hidden'); document.getElementById(id+'-c').classList.remove('hidden'); }
+
+    function render(){
+      if(!RAW) return;
+      document.getElementById('stamp').textContent = `資料更新：${new Date().toLocaleString('zh-TW')}`;
+      const attn = [];
+      let html = '';
+
+      RAW.profiles.forEach(p => {
+        const cats = RAW.catsByProfile[p] || [];
+        const txs = RAW.txByProfile[p] || [];
+        let sections = '';
+        cats.forEach((cat, ci) => {
+          const rows = cat.tasks.map(t => ({ t, agg: aggregate(t, txs) }));
+          rows.forEach(({t, agg}) => {
+            const l = lightOf(t, agg);
+            if (l.dot === '🔴') attn.push(`<b>${PROFILE_LABEL[p]||p}</b> · ${escapeHtml(cat.title)}　「${escapeHtml(t.name)}」— ${l.text}`);
+          });
+          rows.sort((a,b) => a.agg.countWin - b.agg.countWin);   // 次數由低到高，左邊＝最少
+          sections += catBlock(p, ci, cat, rows);
+        });
+        html += `<div class="card">
+          <div class="card-title">${PROFILE_LABEL[p] || p}</div>
+          ${sections || '<p class="empty">尚無規則</p>'}
+        </div>`;
+      });
+
+      const attnCard = `<div class="card attn">
+        <div class="card-title">🚨 需要關注</div>
+        <p class="card-sub">紅燈：孩子幾乎不做的獎勵，或經常發生的禁止行為</p>
+        ${attn.length ? attn.map(a=>`<div class="attn-item">${a}</div>`).join('') : '<p class="empty">太棒了，目前沒有紅燈項目 🎉</p>'}
+      </div>`;
+
+      // 折線圖優先，需要關注摘要放最後
+      document.getElementById('report').innerHTML = html + attnCard;
+    }
+
+    function setWindow(d){
+      WINDOW_DAYS = d;
+      document.querySelectorAll('.win-btn').forEach(b => b.classList.toggle('active', Number(b.dataset.win) === d));
+      render();
+    }
+  </script>
+</body>
+</html>

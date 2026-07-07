@@ -33,6 +33,8 @@
     .avatar-img {
       width: 60px; height: 60px; border-radius: 50%; border: 3px solid var(--mario-yellow);
       object-fit: cover; background-color: white; box-shadow: 0 0 10px rgba(251, 208, 0, 0.5); transition: transform 0.3s;
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
     }
     .player-select {
       background: rgba(255, 255, 255, 0.2); color: white; border: 2px solid white; border-radius: 8px;
@@ -222,15 +224,17 @@
 
       currentTasks = [...(allTasksData[currentPlayer] || []), ...(allTasksData['common'] || [])];
 
-      renderApp(); 
+      renderApp();
       try {
         await refreshStatus();
+        renderApp();   // 用後端真實的 completedTasks 重畫，修正切換 profile 後勾選(✅)消失的問題
       } catch (error) {
         alert(`API 連線失敗：${error.message || error}`);
         totalCoins = 0;
         behaviorLogs = [];
         completedTasks = [];
         updateUI();
+        renderApp();   // 連線失敗時也讓按鈕狀態與資料一致
       }
     }
 
@@ -402,16 +406,20 @@
     }
 
     // 頭像連點五下 → 直接進入任務管理頁（該頁有獨立密碼視窗）
+    // 用 click（每次點擊只觸發一次，不會過敏）；手機能連點的關鍵是 CSS 的
+    // touch-action:manipulation —— 擋掉雙擊縮放手勢，連點才不會被瀏覽器吃掉。
     let avatarClickCount = 0; let avatarClickTimer;
-    document.getElementById('avatar-img').addEventListener('click', () => {
+    const avatarEl = document.getElementById('avatar-img');
+    function onAvatarTap() {
       avatarClickCount++;
       clearTimeout(avatarClickTimer);
-      avatarClickTimer = setTimeout(() => { avatarClickCount = 0; }, 2000);
+      avatarClickTimer = setTimeout(() => { avatarClickCount = 0; }, 3000);
       if (avatarClickCount >= 5) {
         avatarClickCount = 0;
         window.location.href = 'admin-tasks.html';
       }
-    });
+    }
+    avatarEl.addEventListener('click', onAvatarTap);
 
     loadConfigAndInit();
   </script>

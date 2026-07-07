@@ -273,7 +273,10 @@
     <div id="main-area" class="hidden">
       <div class="header-row">
         <h1>📋 管理後台</h1>
-        <a href="index.html" class="btn-back">← 回瑪利歐金幣</a>
+        <div style="display:flex; gap:8px;">
+          <a href="insights.html" class="btn-back">📊 行為洞察</a>
+          <a href="index.html" class="btn-back">← 回瑪利歐金幣</a>
+        </div>
       </div>
 
       <div class="admin-section coins-section">
@@ -354,6 +357,12 @@
       if (!tasksData.common) tasksData.common = [];
     }
 
+    function grantAccess() {
+      document.getElementById('lock-screen').classList.add('hidden');
+      document.getElementById('main-area').classList.remove('hidden');
+      refreshCoins();
+      loadFromApi();
+    }
     function unlock() {
       const pwd = document.getElementById('admin-pwd').value;
       const errEl = document.getElementById('lock-err');
@@ -363,11 +372,11 @@
         return;
       }
       errEl.classList.add('hidden');
-      document.getElementById('lock-screen').classList.add('hidden');
-      document.getElementById('main-area').classList.remove('hidden');
-      refreshCoins();
-      loadFromApi();
+      sessionStorage.setItem('gh_authed', '1');   // 本次 session 記住已驗證，洞察頁免再輸入
+      grantAccess();
     }
+    // 同一 session 已驗證過密碼（例如剛從洞察頁過來）→ 自動解鎖
+    if (sessionStorage.getItem('gh_authed') === '1') grantAccess();
 
     function fillCoinsDropdown() {
       const sel = document.getElementById('coins-player');
